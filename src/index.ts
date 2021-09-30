@@ -107,3 +107,49 @@ scene.onPointerMove = function (evt, pickInfo, type) {
     }
 }
 
+var sphere = BABYLON.Mesh.CreateSphere("sphere1", 16, 2, scene);
+// sphere.rotation.x = Math.PI / 2
+sphere.position.y = 1;
+let lightGen2 = castShadow(pointLight, sphere)
+
+
+var pointerDragBehavior = new BABYLON.PointerDragBehavior({
+    dragPlaneNormal: new BABYLON.Vector3(0, 1, 0)
+});
+
+// Use drag plane in world space
+pointerDragBehavior.useObjectOrientationForDragging = false;
+
+// Listen to drag events
+pointerDragBehavior.onDragStartObservable.add((event) => {
+    console.log("dragStart");
+})
+pointerDragBehavior.onDragObservable.add((event) => {
+
+    // sphere.position.y = 3
+    // event.dragPlanePoint.y = 0
+    // pointerDragBehavior.attachedNode.position.y = event.dragPlanePoint.y + 1
+
+    // let pos = pointerDragBehavior.attachedNode.position
+    let pos = event.dragPlanePoint
+    let ray = new BABYLON.Ray(pos, new BABYLON.Vector3(0, -1, 0))
+    let res = scene.pickWithRay(ray, mesh => mesh === ground)
+    if (res.hit) {
+        // TODO 似乎更改pointerDragBehavior.attachedNode.position会造成拖拽的结果错误
+        // TODO 似乎无法使拾取地面失败时，不能使拖拽无效
+        pointerDragBehavior.attachedNode.position = res.pickedPoint
+        pointerDragBehavior.attachedNode.position.y = 0
+        console.log("hit")
+    } else {
+        pointerDragBehavior.attachedNode.position = pointerDragBehavior.lastDragPosition
+    }
+})
+pointerDragBehavior.onDragEndObservable.add((event) => {
+    console.log("dragEnd");
+})
+pointerDragBehavior.moveAttached = false
+
+// If handling drag events manually is desired, set move attached to false
+// pointerDragBehavior.moveAttached = false;
+
+sphere.addBehavior(pointerDragBehavior);
