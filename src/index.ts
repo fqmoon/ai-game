@@ -136,7 +136,7 @@ scene.onPointerObservable.add((pointerInfo, eventState) => {
             // 恢复默认控制
             camera.attachControl(canvas)
             for (const [obj, info] of draggingObjInfos.entries()) {
-                obj.position = info.originPosition
+                obj.position.y = info.originPosition.y
             }
             draggingObjInfos.clear()
             break;
