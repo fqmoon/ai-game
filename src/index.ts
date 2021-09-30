@@ -87,7 +87,10 @@ toDrag.add(box)
 toDrag.add(sphere)
 
 // 被拾取的物体
-let draggingObjs = new Set<BABYLON.AbstractMesh>()
+// 存储拖拽开始前的物体信息
+let draggingObjInfos = new Map<BABYLON.AbstractMesh, {
+    originPosition: BABYLON.Vector3,
+}>()
 
 // 拖拽过程中相对于地面位置的偏移
 let dragOffset = new BABYLON.Vector3(0, 2, 0)
@@ -102,12 +105,12 @@ function getGroundPosition() {
 
 // 更新所有拖拽物体的位置
 function updateAllDraggingObjPos() {
-    if (draggingObjs.size === 0)
+    if (draggingObjInfos.size === 0)
         return
 
     let groundPos = getGroundPosition()
     if (groundPos) {
-        for (const draggingObj of draggingObjs) {
+        for (const draggingObj of draggingObjInfos.keys()) {
             draggingObj.position = groundPos.add(dragOffset)
         }
     }
@@ -118,7 +121,9 @@ scene.onPointerObservable.add((pointerInfo, eventState) => {
         case BABYLON.PointerEventTypes.POINTERDOWN:
             if (pointerInfo.pickInfo.hit && toDrag.has(pointerInfo.pickInfo.pickedMesh)) {
                 let pickedObj = pointerInfo.pickInfo.pickedMesh
-                draggingObjs.add(pickedObj)
+                draggingObjInfos.set(pickedObj, {
+                    originPosition: pickedObj.position.clone(),
+                })
                 // 使默认控制失效
                 camera.detachControl(canvas)
                 // 这里拖拽还没有被调用（因为鼠标没有移动），需要手动调用以表示拖拽开始
@@ -128,7 +133,10 @@ scene.onPointerObservable.add((pointerInfo, eventState) => {
         case BABYLON.PointerEventTypes.POINTERUP:
             // 恢复默认控制
             camera.attachControl(canvas)
-            draggingObjs.clear()
+            for (const [obj, info] of draggingObjInfos.entries()) {
+                obj.position = info.originPosition
+            }
+            draggingObjInfos.clear()
             break;
         case BABYLON.PointerEventTypes.POINTERMOVE:
             updateAllDraggingObjPos()
