@@ -77,79 +77,61 @@ let camera = createCamera()
 let box = createBox()
 let {light: pointLight, lightSphere: pointLightSphere} = createPointLight()
 let lightGen = castShadow(pointLight, box)
-
-
-let picked = false
-let pickedObjs = new Set()
-// 这里的pick事件可能是指鼠标的click事件而非down事件
-scene.onPointerPick = function (evt, pickInfo) {
-    if (pickInfo.hit) {
-        if (pickInfo.pickedMesh === box) {
-            box.position.y += 1
-            picked = true
-            pickedObjs.add(box)
-        } else {
-            picked = false
-            for (const pickedObj of pickedObjs) {
-                // @ts-ignore
-                pickedObj.position = pickInfo.pickedPoint
-            }
-            pickedObjs.clear()
-        }
-    } else {
-        console.log("error! 不应该拾取不到")
-    }
-};
-
-scene.onPointerMove = function (evt, pickInfo, type) {
-    if (picked) {
-        console.log(pickInfo)
-    }
-}
-
 var sphere = BABYLON.Mesh.CreateSphere("sphere1", 16, 2, scene);
-// sphere.rotation.x = Math.PI / 2
 sphere.position.y = 1;
 let lightGen2 = castShadow(pointLight, sphere)
 
+// 需要拾取的物体
+let toDrag = new Set<BABYLON.AbstractMesh>()
+toDrag.add(box)
+toDrag.add(sphere)
 
-var pointerDragBehavior = new BABYLON.PointerDragBehavior({
-    dragPlaneNormal: new BABYLON.Vector3(0, 1, 0)
-});
+// 被拾取的物体
+let draggingObjs = new Set<BABYLON.AbstractMesh>()
 
-// Use drag plane in world space
-pointerDragBehavior.useObjectOrientationForDragging = false;
+// 拖拽过程中相对于地面位置的偏移
+let dragOffset = new BABYLON.Vector3(0, 2, 0)
 
-// Listen to drag events
-pointerDragBehavior.onDragStartObservable.add((event) => {
-    console.log("dragStart");
-})
-pointerDragBehavior.onDragObservable.add((event) => {
-
-    // sphere.position.y = 3
-    // event.dragPlanePoint.y = 0
-    // pointerDragBehavior.attachedNode.position.y = event.dragPlanePoint.y + 1
-
-    // let pos = pointerDragBehavior.attachedNode.position
-    let pos = event.dragPlanePoint
-    let ray = new BABYLON.Ray(pos, new BABYLON.Vector3(0, -1, 0))
-    let res = scene.pickWithRay(ray, mesh => mesh === ground)
+// 获取当前鼠标所在的地形位置
+function getGroundPosition() {
+    let res = scene.pick(scene.pointerX, scene.pointerY, mesh => mesh === ground)
     if (res.hit) {
-        // TODO 似乎更改pointerDragBehavior.attachedNode.position会造成拖拽的结果错误
-        // TODO 似乎无法使拾取地面失败时，不能使拖拽无效
-        pointerDragBehavior.attachedNode.position = res.pickedPoint
-        pointerDragBehavior.attachedNode.position.y = 0
-        console.log("hit")
-    } else {
-        pointerDragBehavior.attachedNode.position = pointerDragBehavior.lastDragPosition
+        return res.pickedPoint
+    }
+}
+
+// 更新所有拖拽物体的位置
+function updateAllDraggingObjPos() {
+    if (draggingObjs.size === 0)
+        return
+
+    let groundPos = getGroundPosition()
+    if (groundPos) {
+        for (const draggingObj of draggingObjs) {
+            draggingObj.position = groundPos.add(dragOffset)
+        }
+    }
+}
+
+scene.onPointerObservable.add((pointerInfo, eventState) => {
+    switch (pointerInfo.type) {
+        case BABYLON.PointerEventTypes.POINTERDOWN:
+            if (pointerInfo.pickInfo.hit && toDrag.has(pointerInfo.pickInfo.pickedMesh)) {
+                let pickedObj = pointerInfo.pickInfo.pickedMesh
+                draggingObjs.add(pickedObj)
+                // 使默认控制失效
+                camera.detachControl(canvas)
+                // 这里拖拽还没有被调用（因为鼠标没有移动），需要手动调用以表示拖拽开始
+                updateAllDraggingObjPos()
+            }
+            break;
+        case BABYLON.PointerEventTypes.POINTERUP:
+            // 恢复默认控制
+            camera.attachControl(canvas)
+            draggingObjs.clear()
+            break;
+        case BABYLON.PointerEventTypes.POINTERMOVE:
+            updateAllDraggingObjPos()
+            break;
     }
 })
-pointerDragBehavior.onDragEndObservable.add((event) => {
-    console.log("dragEnd");
-})
-pointerDragBehavior.moveAttached = false
-
-// If handling drag events manually is desired, set move attached to false
-// pointerDragBehavior.moveAttached = false;
-
-sphere.addBehavior(pointerDragBehavior);
