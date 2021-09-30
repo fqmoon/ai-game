@@ -1,5 +1,5 @@
 import * as BABYLON from "babylonjs"
-
+import {ExecuteCodeAction} from "babylonjs/Actions/directActions";
 
 let canvas = document.getElementById("root") as HTMLCanvasElement
 let engine = new BABYLON.Engine(canvas)
@@ -33,7 +33,7 @@ function createSkyLight() {
 
 function createCamera() {
     const camera = new BABYLON.ArcRotateCamera(
-        "camera", -Math.PI / 2, Math.PI / 2.5, 3, new BABYLON.Vector3(0, 0, 0),
+        "camera", -Math.PI / 2, Math.PI / 2.5, 50, new BABYLON.Vector3(0, 0, 0),
         scene);
     camera.attachControl(canvas, true);
     return camera
@@ -118,6 +118,12 @@ function updateAllDraggingObjPos() {
     }
 }
 
+let gameStates = {
+    game: "gaming",
+    region: undefined,
+    dragging: false,
+}
+
 scene.onPointerObservable.add((pointerInfo, eventState) => {
     switch (pointerInfo.type) {
         case BABYLON.PointerEventTypes.POINTERDOWN:
@@ -130,6 +136,8 @@ scene.onPointerObservable.add((pointerInfo, eventState) => {
                 camera.detachControl(canvas)
                 // 这里拖拽还没有被调用（因为鼠标没有移动），需要手动调用以表示拖拽开始
                 updateAllDraggingObjPos()
+                // 设置状态机
+                gameStates.dragging = true
             }
             break;
         case BABYLON.PointerEventTypes.POINTERUP:
@@ -139,9 +147,64 @@ scene.onPointerObservable.add((pointerInfo, eventState) => {
                 obj.position.y = info.originPosition.y
             }
             draggingObjInfos.clear()
+            // 设置状态机
+            gameStates.dragging = false
             break;
         case BABYLON.PointerEventTypes.POINTERMOVE:
             updateAllDraggingObjPos()
             break;
     }
 })
+
+function createRegion(position: BABYLON.Vector3) {
+    let region = BABYLON.MeshBuilder.CreatePlane("region", {
+        width: 10,
+        height: 20,
+    }, scene)
+    region.position = position
+    region.material = new BABYLON.StandardMaterial("", scene)
+    region.rotation.x = Math.PI * 0.5
+    // @ts-ignore
+    // TODO 并不透明
+    region.material.diffuseColor = new BABYLON.Color4(0.0, 0.5, 0.5, 0.5)
+
+    return region
+}
+
+// 左岸
+let region1 = createRegion(new BABYLON.Vector3(-20, 0.01, 0))
+// 右岸
+let region2 = createRegion(new BABYLON.Vector3(20, 0.01, 0))
+gameStates.region = region1
+
+function registerRegionActions(region: BABYLON.AbstractMesh) {
+    let actionMger = new BABYLON.ActionManager(scene)
+    region.actionManager = actionMger
+
+    let conditionA = new BABYLON.PredicateCondition(actionMger, () =>
+        gameStates.game === "gaming" && gameStates.dragging === true && gameStates.region === region)
+    let greenColor = new BABYLON.Color4(0, 1, 0, 0.5)
+    let originColor = new BABYLON.Color4(0.0, 0.5, 0.5, 0.5)
+
+    let inOutAction = new BABYLON.SetValueAction(
+        BABYLON.ActionManager.OnPointerOverTrigger, region.material, "diffuseColor",
+        greenColor, conditionA)
+    let outAction = new BABYLON.SetValueAction(
+        BABYLON.ActionManager.OnPointerOutTrigger, region.material, "diffuseColor",
+        originColor, conditionA)
+    // TODO OnPickDownTrigger只能注册在scene上
+    let downAction = new BABYLON.SetValueAction(
+        BABYLON.ActionManager.OnPickDownTrigger, region.material, "diffuseColor",
+        greenColor, conditionA)
+    let upAction = new BABYLON.SetValueAction(
+        BABYLON.ActionManager.OnPickUpTrigger, region.material, "diffuseColor",
+        originColor, conditionA)
+
+    actionMger.registerAction(inOutAction)
+    actionMger.registerAction(outAction)
+    actionMger.registerAction(downAction)
+    actionMger.registerAction(upAction)
+}
+
+registerRegionActions(region1)
+registerRegionActions(region2)
