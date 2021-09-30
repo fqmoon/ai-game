@@ -1,5 +1,4 @@
 import * as BABYLON from "babylonjs"
-import {IShadowLight} from "babylonjs/Lights/shadowLight";
 
 
 let canvas = document.getElementById("root") as HTMLCanvasElement
@@ -79,19 +78,32 @@ let box = createBox()
 let {light: pointLight, lightSphere: pointLightSphere} = createPointLight()
 let lightGen = castShadow(pointLight, box)
 
+
+let picked = false
+let pickedObjs = new Set()
 // 这里的pick事件可能是指鼠标的click事件而非down事件
 scene.onPointerPick = function (evt, pickInfo) {
-    // if the click hits the ground object, we change the impact position
     if (pickInfo.hit) {
         if (pickInfo.pickedMesh === box) {
             box.position.y += 1
-            console.log(pickInfo)
+            picked = true
+            pickedObjs.add(box)
+        } else {
+            picked = false
+            for (const pickedObj of pickedObjs) {
+                // @ts-ignore
+                pickedObj.position = pickInfo.pickedPoint
+            }
+            pickedObjs.clear()
         }
+    } else {
+        console.log("error! 不应该拾取不到")
     }
 };
 
 scene.onPointerMove = function (evt, pickInfo, type) {
-    console.log(evt)
-    console.log(pickInfo)
+    if (picked) {
+        console.log(pickInfo)
+    }
 }
 
