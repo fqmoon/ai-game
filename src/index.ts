@@ -76,10 +76,12 @@ let ground = createGround()
 let camera = createCamera()
 let box = createBox()
 let {light: pointLight, lightSphere: pointLightSphere} = createPointLight()
-let lightGen = castShadow(pointLight, box)
+let shadowGen = new BABYLON.ShadowGenerator(1024, pointLight)
+shadowGen.usePoissonSampling = true;
+shadowGen.addShadowCaster(box)
 var sphere = BABYLON.Mesh.CreateSphere("sphere1", 16, 2, scene);
 sphere.position.y = 1;
-let lightGen2 = castShadow(pointLight, sphere)
+shadowGen.addShadowCaster(sphere)
 
 // 需要拾取的物体
 let toDrag = new Set<BABYLON.AbstractMesh>()
