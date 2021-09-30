@@ -1,5 +1,6 @@
 import * as BABYLON from "babylonjs"
 import {ExecuteCodeAction} from "babylonjs/Actions/directActions";
+import {Observable} from "babylonjs/Misc/observable";
 
 let canvas = document.getElementById("root") as HTMLCanvasElement
 let engine = new BABYLON.Engine(canvas)
@@ -127,6 +128,9 @@ let gameStates = {
     dragging: false,
 }
 
+let dragStartObservable = new BABYLON.Observable()
+let dragEndObservable = new BABYLON.Observable()
+
 scene.onPointerObservable.add((pointerInfo, eventState) => {
     switch (pointerInfo.type) {
         case BABYLON.PointerEventTypes.POINTERDOWN:
@@ -141,6 +145,7 @@ scene.onPointerObservable.add((pointerInfo, eventState) => {
                 updateAllDraggingObjPos()
                 // 设置状态机
                 gameStates.dragging = true
+                dragStartObservable.notifyObservers(null)
             }
             break;
         case BABYLON.PointerEventTypes.POINTERUP:
@@ -153,6 +158,7 @@ scene.onPointerObservable.add((pointerInfo, eventState) => {
                 draggingObjInfos.clear()
                 // 设置状态机
                 gameStates.dragging = false
+                dragEndObservable.notifyObservers(null)
             }
             break;
         case BABYLON.PointerEventTypes.POINTERMOVE:
@@ -212,19 +218,17 @@ function registerBoatRegionActions(region: BABYLON.AbstractMesh) {
     let outAction = new BABYLON.SetValueAction(
         BABYLON.ActionManager.OnPointerOutTrigger, region.material, "diffuseColor",
         blueColor, dragCondition)
-    let beginDragAction = new BABYLON.SetValueAction(
-        BABYLON.ActionManager.OnPickDownTrigger, region.material, "diffuseColor",
-        blueColor)
-    // 这里物体飞起导致pickUp无法在物体上触发，于是注册到scene上
-    // TODO 每帧都被调用，优化性能。可以在drag结束时发送事件，监听它来完成
-    let endDragAction = new BABYLON.SetValueAction(
-        BABYLON.ActionManager.OnEveryFrameTrigger, region.material, "diffuseColor",
-        originColor, noDragCondition)
 
     actionMger.registerAction(inAction)
     actionMger.registerAction(outAction)
-    sphere.actionManager.registerAction(beginDragAction)
-    scene.actionManager.registerAction(endDragAction)
+    dragStartObservable.add(() => {
+        // @ts-ignore
+        region.material.diffuseColor = blueColor
+    })
+    dragEndObservable.add(() => {
+        // @ts-ignore
+        region.material.diffuseColor = originColor
+    })
 }
 
 registerBoatRegionActions(boat.region)
