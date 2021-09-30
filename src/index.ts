@@ -119,8 +119,11 @@ function updateAllDraggingObjPos() {
 }
 
 let gameStates = {
+    // 游戏执行状态
     game: "gaming",
-    region: undefined,
+    // 目前在哪个岸
+    curBank: undefined,
+    // 是否处于拖拽状态
     dragging: false,
 }
 
@@ -172,39 +175,53 @@ function createRegion(position: BABYLON.Vector3) {
 }
 
 // 左岸
-let region1 = createRegion(new BABYLON.Vector3(-20, 0.01, 0))
+let leftBank = {
+    region: createRegion(new BABYLON.Vector3(-20, 0.01, 0)),
+}
 // 右岸
-let region2 = createRegion(new BABYLON.Vector3(20, 0.01, 0))
-gameStates.region = region1
+let rightBank = {
+    region: createRegion(new BABYLON.Vector3(20, 0.01, 0)),
+}
+gameStates.curBank = leftBank
 
-function registerRegionActions(region: BABYLON.AbstractMesh) {
+let boat = {
+    region: createRegion(new BABYLON.Vector3(0, 0.01, 0))
+}
+
+scene.actionManager = new BABYLON.ActionManager(scene)
+sphere.actionManager = new BABYLON.ActionManager(scene)
+
+function registerBoatRegionActions(region: BABYLON.AbstractMesh) {
     let actionMger = new BABYLON.ActionManager(scene)
     region.actionManager = actionMger
 
-    let conditionA = new BABYLON.PredicateCondition(actionMger, () =>
-        gameStates.game === "gaming" && gameStates.dragging === true && gameStates.region === region)
+    let dragCondition = new BABYLON.PredicateCondition(actionMger, () =>
+        gameStates.game === "gaming" && gameStates.dragging === true)
+    let noDragCondition = new BABYLON.PredicateCondition(actionMger, () =>
+        gameStates.game === "gaming" && gameStates.dragging === false)
     let greenColor = new BABYLON.Color4(0, 1, 0, 0.5)
-    let originColor = new BABYLON.Color4(0.0, 0.5, 0.5, 0.5)
+    let blueColor = new BABYLON.Color4(0, 0, 1, 0.5)
+    let originColor = new BABYLON.Color4(0.5, 0.5, 0, 0.5)
 
-    let inOutAction = new BABYLON.SetValueAction(
+    // OnPickDownTrigger只能注册在scene.actionManager上
+    let inAction = new BABYLON.SetValueAction(
         BABYLON.ActionManager.OnPointerOverTrigger, region.material, "diffuseColor",
-        greenColor, conditionA)
+        greenColor, dragCondition)
     let outAction = new BABYLON.SetValueAction(
         BABYLON.ActionManager.OnPointerOutTrigger, region.material, "diffuseColor",
-        originColor, conditionA)
-    // TODO OnPickDownTrigger只能注册在scene上
-    let downAction = new BABYLON.SetValueAction(
+        blueColor, dragCondition)
+    let beginDragAction = new BABYLON.SetValueAction(
         BABYLON.ActionManager.OnPickDownTrigger, region.material, "diffuseColor",
-        greenColor, conditionA)
-    let upAction = new BABYLON.SetValueAction(
-        BABYLON.ActionManager.OnPickUpTrigger, region.material, "diffuseColor",
-        originColor, conditionA)
+        blueColor)
+    // 这里物体飞起导致pickUp无法在物体上触发，于是注册到scene上
+    let endDragAction = new BABYLON.SetValueAction(
+        BABYLON.ActionManager.OnEveryFrameTrigger, region.material, "diffuseColor",
+        originColor, noDragCondition)
 
-    actionMger.registerAction(inOutAction)
+    actionMger.registerAction(inAction)
     actionMger.registerAction(outAction)
-    actionMger.registerAction(downAction)
-    actionMger.registerAction(upAction)
+    sphere.actionManager.registerAction(beginDragAction)
+    scene.actionManager.registerAction(endDragAction)
 }
 
-registerRegionActions(region1)
-registerRegionActions(region2)
+registerBoatRegionActions(boat.region)
