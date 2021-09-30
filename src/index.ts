@@ -130,7 +130,7 @@ let gameStates = {
 scene.onPointerObservable.add((pointerInfo, eventState) => {
     switch (pointerInfo.type) {
         case BABYLON.PointerEventTypes.POINTERDOWN:
-            if (pointerInfo.pickInfo.hit && toDrag.has(pointerInfo.pickInfo.pickedMesh)) {
+            if (!gameStates.dragging && pointerInfo.pickInfo.hit && toDrag.has(pointerInfo.pickInfo.pickedMesh)) {
                 let pickedObj = pointerInfo.pickInfo.pickedMesh
                 draggingObjInfos.set(pickedObj, {
                     originPosition: pickedObj.position.clone(),
@@ -144,14 +144,16 @@ scene.onPointerObservable.add((pointerInfo, eventState) => {
             }
             break;
         case BABYLON.PointerEventTypes.POINTERUP:
-            // 恢复默认控制
-            camera.attachControl(canvas)
-            for (const [obj, info] of draggingObjInfos.entries()) {
-                obj.position.y = info.originPosition.y
+            if (gameStates.dragging) {
+                // 恢复默认控制
+                camera.attachControl(canvas)
+                for (const [obj, info] of draggingObjInfos.entries()) {
+                    obj.position.y = info.originPosition.y
+                }
+                draggingObjInfos.clear()
+                // 设置状态机
+                gameStates.dragging = false
             }
-            draggingObjInfos.clear()
-            // 设置状态机
-            gameStates.dragging = false
             break;
         case BABYLON.PointerEventTypes.POINTERMOVE:
             updateAllDraggingObjPos()
@@ -214,6 +216,7 @@ function registerBoatRegionActions(region: BABYLON.AbstractMesh) {
         BABYLON.ActionManager.OnPickDownTrigger, region.material, "diffuseColor",
         blueColor)
     // 这里物体飞起导致pickUp无法在物体上触发，于是注册到scene上
+    // TODO 每帧都被调用，优化性能。可以在drag结束时发送事件，监听它来完成
     let endDragAction = new BABYLON.SetValueAction(
         BABYLON.ActionManager.OnEveryFrameTrigger, region.material, "diffuseColor",
         originColor, noDragCondition)
