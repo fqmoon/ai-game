@@ -4,28 +4,158 @@ import {createGame} from "./game";
 let game = createGame()
 game.start()
 
-// // 需要拾取的物体
-// let toDrag = new Set<BABYLON.AbstractMesh>()
-// toDrag.add(box)
-// toDrag.add(sphere)
-//
-// // 被拾取的物体
-// // 存储拖拽开始前的物体信息
-// let draggingObjInfos = new Map<BABYLON.AbstractMesh, {
-//     originPosition: BABYLON.Vector3,
-// }>()
-//
-// // 拖拽过程中相对于地面位置的偏移
-// let dragOffset = new BABYLON.Vector3(0, 2, 0)
-//
-// // 获取当前鼠标所在的地形位置
-// function getGroundPosition() {
-//     let res = scene.pick(scene.pointerX, scene.pointerY, mesh => mesh === ground)
-//     if (res.hit) {
-//         return res.pickedPoint
-//     }
-// }
-//
+// TODO 将下面绑定用户操作的代码封装
+// 从数据上来说，需要：
+// - 被绑定的物体
+// - 起始地
+// - 目标地
+
+// 具体的来说
+// 在左岸时，人是可以拖动的物体
+// 左岸和船是目标区域
+
+interface DragAction {
+    (props: { draggingObj: BABYLON.AbstractMesh }): any,
+}
+
+/**
+ * 注册拖拽事件发生器
+ */
+function createDragController({scene, camera, canvas, dragAction}: {
+    scene: BABYLON.Scene,
+    camera: BABYLON.Camera,
+    canvas: HTMLElement,
+    dragAction: DragAction,
+}) {
+    let onDragStartObservable = new BABYLON.Observable()
+    let onDragEndObservable = new BABYLON.Observable()
+    let onAfterDragMoveObservable = new BABYLON.Observable()
+
+    let toDrags = new Set<BABYLON.AbstractMesh>()
+
+    let dragging = false
+    let draggingObj: BABYLON.AbstractMesh = undefined
+
+    scene.onPointerObservable.add((pointerInfo, eventState) => {
+        switch (pointerInfo.type) {
+            case BABYLON.PointerEventTypes.POINTERDOWN:
+                // TODO 缺少目标物体的判定
+                // TODO 此为拖拽器，却没有拖拽功能，改名？
+                if (!dragging && pointerInfo.pickInfo.hit && toDrags.has(pointerInfo.pickInfo.pickedMesh)) {
+                    // 使默认控制失效
+                    camera.detachControl(canvas)
+                    draggingObj = pointerInfo.pickInfo.pickedMesh
+                    dragging = true
+                    onDragStartObservable.notifyObservers({draggingObj, pickInfo: pointerInfo.pickInfo})
+                }
+                break;
+            case BABYLON.PointerEventTypes.POINTERUP:
+                if (dragging) {
+                    // 恢复默认控制
+                    camera.attachControl(canvas)
+                    onDragEndObservable.notifyObservers({draggingObj, pickInfo: pointerInfo.pickInfo})
+                    dragging = false
+                    draggingObj = undefined
+                }
+                break;
+            case BABYLON.PointerEventTypes.POINTERMOVE:
+                if (dragging) {
+                    dragAction({draggingObj})
+                    onAfterDragMoveObservable.notifyObservers({draggingObj, pickInfo: pointerInfo.pickInfo})
+                }
+                break;
+        }
+    })
+
+    return {
+        toDrags,
+        draggingObj,
+        dragging,
+        onDragStartObservable,
+        onAfterDragMoveObservable,
+        onDragEndObservable,
+    }
+}
+
+let dragAction: DragAction = ({draggingObj}) => {
+    // if (draggingObj && pickInfo.hit) {
+    //     draggingObj.position.y = pickInfo.pickedPoint.y + 3
+    // }
+    console.log('g')
+}
+
+let gameScene = game.mainScene
+
+let dragController = createDragController({
+    dragAction,
+    scene: gameScene.bScene,
+    canvas: game.canvas,
+    camera: gameScene.bScene.cameras[0],
+})
+dragController.toDrags.add(gameScene.humans.values().next().value.mesh)
+dragController.onDragEndObservable.add(() => {
+    console.log("end")
+})
+dragController.onDragStartObservable.add(() => {
+    console.log("start")
+})
+dragController.onAfterDragMoveObservable.add(() => {
+    console.log("move")
+})
+
+/**
+ * 简单的绑定
+ * 注册物体，然后和目标物体位置绑定
+ * 这里只负责一组物体到目标地点的拖拽，在游戏中应该存在2个目标地点，可以简单的用2个管理器
+ */
+function createDragManager({scene}: {
+    // 别想那么多参数，先写
+    // 重要性排序：必要数据、操作过程、自定义参数效果
+    scene: BABYLON.Scene
+}) {
+    // 需要拾取的物体
+    let needToDrags = new Set<BABYLON.AbstractMesh>()
+
+    // 存储拖拽开始前的物体信息
+    let draggingObjInfos = new Map<BABYLON.AbstractMesh, {
+        originPosition: BABYLON.Vector3,
+    }>()
+
+    // 拖拽过程中相对于地面位置的偏移
+    let dragOffset = new BABYLON.Vector3(0, 2, 0)
+
+
+    // 绑定
+    function bind({}: {
+        obj: any,
+        endRegion: any,
+    }) {
+
+    }
+
+
+    let active = false;
+
+    return {
+        bind,
+        get active() {
+            return active
+        },
+        set active(v) {
+            active = v
+            // TODO
+        },
+    }
+}
+
+// 获取当前鼠标所在的地形位置
+function getGroundPosition(scene: BABYLON.Scene, ground: BABYLON.AbstractMesh) {
+    let res = scene.pick(scene.pointerX, scene.pointerY, mesh => mesh === ground)
+    if (res.hit) {
+        return res.pickedPoint
+    }
+}
+
 // // 更新所有拖拽物体的位置
 // function updateAllDraggingObjPos() {
 //     if (draggingObjInfos.size === 0)

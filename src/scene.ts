@@ -1,13 +1,14 @@
 import * as BABYLON from "babylonjs";
 import {createGame} from "./game";
-import {createHuman} from "./human";
+import {createHuman, Human} from "./human";
 
-export interface GameScene {
-    bScene: BABYLON.Scene
-    shadowGenerator: BABYLON.ShadowGenerator
-}
+// export interface GameScene {
+//     bScene: BABYLON.Scene
+//     shadowGenerator: BABYLON.ShadowGenerator
+//     humans: Set<BABYLON.AbstractMesh>
+// }
 
-export function createMainScene({engine, canvas}: { engine: BABYLON.Engine, canvas: HTMLCanvasElement }): GameScene {
+export function createMainScene({engine, canvas}: { engine: BABYLON.Engine, canvas: HTMLCanvasElement }) {
     const scene = new BABYLON.Scene(engine);
 
     function createGround() {
@@ -63,10 +64,14 @@ export function createMainScene({engine, canvas}: { engine: BABYLON.Engine, canv
     shadowGenerator.usePoissonSampling = true;
     shadowGenerator.addShadowCaster(human.mesh)
 
+    let humans = new Set<Human>()
+    humans.add(human)
+
     return {
         bScene: scene,
         shadowGenerator,
+        humans,
     }
 }
 
-
+export type GameScene = ReturnType<typeof createMainScene>
