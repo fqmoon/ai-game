@@ -1,19 +1,8 @@
 import * as BABYLON from "babylonjs";
 import {createHuman, Human} from "./human";
+import {createGround} from "./ground";
 
 export function createSceneObjs({scene}: { scene: BABYLON.Scene }) {
-    function createGround() {
-        let ground = BABYLON.MeshBuilder.CreateGround("ground", {
-            width: 100,
-            height: 100,
-        }, scene)
-        let groundMat = new BABYLON.StandardMaterial("gm", scene)
-        groundMat.diffuseColor = new BABYLON.Color3(0.5, 0.5, 0.5)
-        ground.material = groundMat
-        ground.receiveShadows = true
-        return ground
-    }
-
     function createSkyLight() {
         const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
         return light
@@ -38,7 +27,7 @@ export function createSceneObjs({scene}: { scene: BABYLON.Scene }) {
     }
 
     let skyLight = createSkyLight()
-    let ground = createGround()
+    let ground = createGround({scene})
 
     let human = createHuman({scene})
 

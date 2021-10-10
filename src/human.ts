@@ -1,5 +1,6 @@
 import * as BABYLON from "babylonjs";
 import {DragController} from "./drag";
+import {Ground} from "./ground";
 
 export function createHuman({scene}: { scene: BABYLON.Scene }) {
     function createBox() {
@@ -19,7 +20,7 @@ export function createHuman({scene}: { scene: BABYLON.Scene }) {
 
     return {
         mesh,
-        listenToDrag: ({dragController, ground}: { dragController: DragController, ground: BABYLON.AbstractMesh }) => {
+        listenToDrag: ({dragController, ground}: { dragController: DragController, ground: Ground }) => {
             dragController.toDrags.add(mesh)
             let originPos = new BABYLON.Vector3()
             dragController.onDragStartObservable.add(({draggingObj, pointerInfo}) => {
@@ -34,7 +35,7 @@ export function createHuman({scene}: { scene: BABYLON.Scene }) {
             })
             dragController.onDragMoveObservable.add(({draggingObj, pointerInfo}) => {
                 if (draggingObj == mesh) {
-                    let pos = getGroundPosition(scene, ground)
+                    let pos = ground.getGroundPosition()
                     if (pos) {
                         draggingObj.position = pos
                         draggingObj.position.y += 3
@@ -42,14 +43,6 @@ export function createHuman({scene}: { scene: BABYLON.Scene }) {
                 }
             })
         }
-    }
-}
-
-// 获取当前鼠标所在的地形位置
-function getGroundPosition(scene: BABYLON.Scene, ground: BABYLON.AbstractMesh) {
-    let res = scene.pick(scene.pointerX, scene.pointerY, mesh => mesh === ground)
-    if (res && res.hit) {
-        return res.pickedPoint
     }
 }
 
