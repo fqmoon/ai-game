@@ -41,6 +41,7 @@ export function createSceneObjs({scene}: { scene: BABYLON.Scene }) {
     let ground = createGround()
 
     let human = createHuman({scene})
+
     let {light: pointLight, lightSphere: pointLightSphere} = createPointLight()
     let shadowGenerator = new BABYLON.ShadowGenerator(1024, pointLight)
     shadowGenerator.usePoissonSampling = true;

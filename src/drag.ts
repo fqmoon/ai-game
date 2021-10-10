@@ -60,3 +60,5 @@ export function createDragController({scene, camera, canvas}: {
 
     return controller
 }
+
+export type DragController = ReturnType<typeof createDragController>
