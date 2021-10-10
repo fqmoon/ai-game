@@ -15,7 +15,7 @@ game.start()
 // 左岸和船是目标区域
 
 interface DragAction {
-    (props: { draggingObj: BABYLON.AbstractMesh }): any,
+    (props: { draggingObj: BABYLON.AbstractMesh, pointerInfo: BABYLON.PointerInfo }): any,
 }
 
 /**
@@ -46,22 +46,22 @@ function createDragController({scene, camera, canvas, dragAction}: {
                     camera.detachControl(canvas)
                     draggingObj = pointerInfo.pickInfo.pickedMesh
                     dragging = true
-                    onDragStartObservable.notifyObservers({draggingObj, pickInfo: pointerInfo.pickInfo})
+                    onDragStartObservable.notifyObservers({draggingObj, pointerInfo})
                 }
                 break;
             case BABYLON.PointerEventTypes.POINTERUP:
                 if (dragging) {
                     // 恢复默认控制
                     camera.attachControl(canvas)
-                    onDragEndObservable.notifyObservers({draggingObj, pickInfo: pointerInfo.pickInfo})
+                    onDragEndObservable.notifyObservers({draggingObj, pointerInfo})
                     dragging = false
                     draggingObj = undefined
                 }
                 break;
             case BABYLON.PointerEventTypes.POINTERMOVE:
                 if (dragging) {
-                    dragAction({draggingObj})
-                    onAfterDragMoveObservable.notifyObservers({draggingObj, pickInfo: pointerInfo.pickInfo})
+                    dragAction({draggingObj, pointerInfo})
+                    onAfterDragMoveObservable.notifyObservers({draggingObj, pointerInfo})
                 }
                 break;
         }
@@ -77,22 +77,27 @@ function createDragController({scene, camera, canvas, dragAction}: {
     }
 }
 
-let dragAction: DragAction = ({draggingObj}) => {
+let dragAction: DragAction = ({draggingObj, pointerInfo}) => {
     // if (draggingObj && pickInfo.hit) {
     //     draggingObj.position.y = pickInfo.pickedPoint.y + 3
     // }
+
     console.log('g')
 }
 
-let gameScene = game.mainScene
+let {scene, sceneObjs, canvas, camera} = game
 
 let dragController = createDragController({
     dragAction,
-    scene: gameScene.bScene,
-    canvas: game.canvas,
-    camera: gameScene.bScene.cameras[0],
+    scene,
+    canvas,
+    camera,
 })
-dragController.toDrags.add(gameScene.humans.values().next().value.mesh)
+for (const human of sceneObjs.humans.values()) {
+    dragController.toDrags.add(human.mesh)
+}
+
+// test
 dragController.onDragEndObservable.add(() => {
     console.log("end")
 })

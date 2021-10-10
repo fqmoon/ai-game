@@ -1,4 +1,3 @@
-import {GameScene} from "./scene";
 import * as BABYLON from "babylonjs";
 
 export interface Human {

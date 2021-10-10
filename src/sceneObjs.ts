@@ -1,16 +1,7 @@
 import * as BABYLON from "babylonjs";
-import {createGame} from "./game";
 import {createHuman, Human} from "./human";
 
-// export interface GameScene {
-//     bScene: BABYLON.Scene
-//     shadowGenerator: BABYLON.ShadowGenerator
-//     humans: Set<BABYLON.AbstractMesh>
-// }
-
-export function createMainScene({engine, canvas}: { engine: BABYLON.Engine, canvas: HTMLCanvasElement }) {
-    const scene = new BABYLON.Scene(engine);
-
+export function createSceneObjs({scene}: { scene: BABYLON.Scene }) {
     function createGround() {
         let ground = BABYLON.MeshBuilder.CreateGround("ground", {
             width: 100,
@@ -26,14 +17,6 @@ export function createMainScene({engine, canvas}: { engine: BABYLON.Engine, canv
     function createSkyLight() {
         const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
         return light
-    }
-
-    function createCamera() {
-        const camera = new BABYLON.ArcRotateCamera(
-            "camera", -Math.PI / 2, Math.PI / 2.5, 50, new BABYLON.Vector3(0, 0, 0),
-            scene);
-        camera.attachControl(canvas, true);
-        return camera
     }
 
     function createPointLight() {
@@ -56,7 +39,6 @@ export function createMainScene({engine, canvas}: { engine: BABYLON.Engine, canv
 
     let skyLight = createSkyLight()
     let ground = createGround()
-    let camera = createCamera()
 
     let human = createHuman({scene})
     let {light: pointLight, lightSphere: pointLightSphere} = createPointLight()
@@ -68,10 +50,11 @@ export function createMainScene({engine, canvas}: { engine: BABYLON.Engine, canv
     humans.add(human)
 
     return {
-        bScene: scene,
         shadowGenerator,
         humans,
+        ground,
+        skyLight,
     }
 }
 
-export type GameScene = ReturnType<typeof createMainScene>
+export type GameScene = ReturnType<typeof createSceneObjs>

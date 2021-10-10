@@ -1,22 +1,14 @@
 import * as BABYLON from "babylonjs";
-import {createMainScene, GameScene} from "./scene";
+import {createSceneObjs} from "./sceneObjs";
 
-export interface Game {
-    engine: BABYLON.Engine,
-    canvas: HTMLCanvasElement,
-    mainScene: GameScene,
-
-    start(): void
-}
-
-export function createGame(): Game {
+export function createGame() {
     let canvas = document.getElementById("root") as HTMLCanvasElement
     let engine = new BABYLON.Engine(canvas)
 
-    let mainScene = createMainScene({
-        engine, canvas
-    })
-    let scene = mainScene.bScene
+    let scene = new BABYLON.Scene(engine)
+    let camera = createCamera(scene, canvas)
+
+    let sceneObjs = createSceneObjs({scene,})
 
     // Resize
     window.addEventListener("resize", function () {
@@ -26,7 +18,9 @@ export function createGame(): Game {
     return {
         engine,
         canvas,
-        mainScene,
+        scene,
+        sceneObjs,
+        camera,
         start: () => {
             engine.runRenderLoop(function () {
                 if (scene && scene.activeCamera) {
@@ -36,3 +30,13 @@ export function createGame(): Game {
         },
     }
 }
+
+function createCamera(scene: BABYLON.Scene, canvas: HTMLElement) {
+    const camera = new BABYLON.ArcRotateCamera(
+        "camera", -Math.PI / 2, Math.PI / 2.5, 50, new BABYLON.Vector3(0, 0, 0),
+        scene);
+    camera.attachControl(canvas, true);
+    return camera
+}
+
+export type Game = ReturnType<typeof createGame>
