@@ -26,6 +26,8 @@ export function createHuman({scene, position, identity}: {
     return {
         mesh,
         identity,
+        // 离地面高度
+        yOff: 0.5,
         get isFollowPointer() {
             return _isFollowPointer
         },

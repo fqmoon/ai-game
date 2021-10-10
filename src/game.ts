@@ -71,8 +71,8 @@ export function createGame() {
                 }
             } else if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERUP) {
                 if (curHuman) {
-                    if (!sceneObjs.regions.leftBank.putHumanByDrag(curHuman, originPos)
-                        && !sceneObjs.regions.boat.putHumanByDrag(curHuman, originPos)) {
+                    if (!sceneObjs.regions.leftBank.putHumanByDrag(curHuman)
+                        && !sceneObjs.regions.boat.putHumanByDrag(curHuman)) {
                         curHuman.mesh.position.copyFrom(originPos)
                     }
 

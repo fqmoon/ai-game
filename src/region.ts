@@ -57,12 +57,12 @@ export function createRegion({scene, position, width, height,}: {
             }
             return !!res
         },
-        putHumanByDrag(human: Human, originPos: BABYLON.Vector3) {
+        putHumanByDrag(human: Human) {
             if (isPick()) {
                 let res = slotManagers[human.identity].put()
                 if (res) {
                     human.mesh.position.x = res.planePos[0]
-                    human.mesh.position.y = originPos.y
+                    human.mesh.position.y = human.yOff
                     human.mesh.position.z = res.planePos[1]
                 }
 
