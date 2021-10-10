@@ -1,7 +1,7 @@
 import * as BABYLON from "babylonjs";
 import {createHuman, Human} from "./human";
 import {createGround} from "./ground";
-import {createRegion} from "./region";
+import {createRegion, Region} from "./region";
 
 export function createSceneObjs({scene}: { scene: BABYLON.Scene }) {
     function createSkyLight() {
@@ -55,19 +55,33 @@ export function createSceneObjs({scene}: { scene: BABYLON.Scene }) {
     humans.add(human2)
     humans.add(human3)
 
-    let region = createRegion({
-        scene,
-        position: new BABYLON.Vector3(20, 0.01, 0),
-        width: 20,
-        height: 40,
-    })
+    let regions = {
+        leftBank: createRegion({
+            scene,
+            position: new BABYLON.Vector3(-30, 0.01, 0),
+            width: 20,
+            height: 40,
+        }),
+        rightBank: createRegion({
+            scene,
+            position: new BABYLON.Vector3(30, 0.01, 0),
+            width: 20,
+            height: 40,
+        }),
+        boat: createRegion({
+            scene,
+            position: new BABYLON.Vector3(0, 0.01, 0),
+            width: 20,
+            height: 40,
+        }),
+    }
 
     return {
         shadowGenerator,
         humans,
         ground,
         skyLight,
-        region,
+        regions,
     }
 }
 

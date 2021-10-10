@@ -1,6 +1,5 @@
 import * as BABYLON from "babylonjs";
 import {createSceneObjs} from "./sceneObjs";
-import {createDragController, DragEventData} from "./drag";
 import {Human} from "./human";
 import {Region} from "./region";
 
@@ -17,7 +16,7 @@ export function createGame() {
     let sceneObjs = createSceneObjs({scene})
 
     let ground = sceneObjs.ground
-    let region = sceneObjs.region
+    let regions = sceneObjs.regions
 
     for (const human of sceneObjs.humans) {
         human.updatePosition = () => {
@@ -51,12 +50,14 @@ export function createGame() {
                         curHuman.updatePosition()
                         camera.detachControl(canvas)
 
-                        region.updateColorByDrag(!!curHuman)
+                        regions.leftBank.updateColorByDrag(!!curHuman)
+                        regions.boat.updateColorByDrag(!!curHuman)
                     }
                 }
             } else if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERUP) {
                 if (curHuman) {
-                    if (!sceneObjs.region.putHuman(curHuman, originPos)) {
+                    if (!sceneObjs.regions.leftBank.putHuman(curHuman, originPos)
+                        && !sceneObjs.regions.boat.putHuman(curHuman, originPos)) {
                         curHuman.mesh.position.copyFrom(originPos)
                     }
 
@@ -64,10 +65,12 @@ export function createGame() {
                     camera.attachControl(canvas)
                     curHuman = undefined
 
-                    region.updateColorByDrag(!!curHuman)
+                    regions.leftBank.updateColorByDrag(!!curHuman)
+                    regions.boat.updateColorByDrag(!!curHuman)
                 }
             } else if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERMOVE) {
-                region.updateColorByDrag(!!curHuman)
+                regions.leftBank.updateColorByDrag(!!curHuman)
+                regions.boat.updateColorByDrag(!!curHuman)
             }
         })
     }

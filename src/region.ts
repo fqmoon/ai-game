@@ -1,4 +1,3 @@
-import {DragController} from "./drag";
 import * as BABYLON from "babylonjs"
 import {createSlotManager} from "./slot";
 import {Human} from "./human";
@@ -66,7 +65,10 @@ export function createRegion({scene, position, width, height,}: {
         updateColorByDrag(dragging: boolean) {
             if (!dragging) {
                 material.diffuseColor.copyFrom(originColor)
-            } else if (isPick()) {
+                return
+            }
+
+            if (isPick()) {
                 material.diffuseColor.copyFrom(selectedColor)
             } else {
                 material.diffuseColor.copyFrom(promoteColor)
