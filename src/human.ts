@@ -1,15 +1,18 @@
 import * as BABYLON from "babylonjs";
-import {DragController} from "./drag";
 import {Ground} from "./ground";
 
-export function createHuman({scene}: { scene: BABYLON.Scene }) {
+export type HumanIdentity = 'missionary' | 'cannibal'
+
+export function createHuman({scene, position, identity}: {
+    scene: BABYLON.Scene, position: BABYLON.Vector3, identity: HumanIdentity
+}) {
     function createBox() {
         const box = BABYLON.MeshBuilder.CreateBox("box", {
             width: 1,
             height: 1,
             depth: 1,
         });
-        box.position = new BABYLON.Vector3(0, 0.5, 0)
+        box.position = position
         let boxMat = new BABYLON.StandardMaterial("boxMat", scene)
         boxMat.diffuseColor = new BABYLON.Color3(1, 0, 0)
         box.material = boxMat
@@ -17,38 +20,33 @@ export function createHuman({scene}: { scene: BABYLON.Scene }) {
     }
 
     let mesh = createBox()
+    let _isFollowPointer = false
+    let _updatePosition: () => any = () => null
 
     return {
         mesh,
-        listenToDrag: ({dragController, ground}: { dragController: DragController, ground: Ground }) => {
-            dragController.toDrags.add(mesh)
-            let originPos = new BABYLON.Vector3()
-
-            function setPosition(draggingObj: BABYLON.AbstractMesh) {
-                let pos = ground.getGroundPosition()
-                if (pos) {
-                    draggingObj.position = pos
-                    draggingObj.position.y += 3
-                }
-            }
-
-            dragController.onDragStartObservable.add(({draggingObj, pointerInfo}) => {
-                if (draggingObj === mesh) {
-                    originPos.copyFrom(mesh.position)
-                    setPosition(draggingObj)
-                }
-            })
-            dragController.onDragEndObservable.add(({draggingObj, pointerInfo}) => {
-                if (draggingObj === mesh) {
-                    mesh.position = originPos
+        identity,
+        get isFollowPointer() {
+            return _isFollowPointer
+        },
+        set isFollowPointer(v) {
+            _isFollowPointer = v
+        },
+        get updatePosition() {
+            return _updatePosition
+        },
+        set updatePosition(v) {
+            _updatePosition = v
+        },
+        registerDrag: ({ground}: {
+            ground: Ground,
+        }) => {
+            scene.onPointerObservable.add((pointerInfo, eventState) => {
+                if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERMOVE && _isFollowPointer) {
+                    _updatePosition()
                 }
             })
-            dragController.onDragMoveObservable.add(({draggingObj, pointerInfo}) => {
-                if (draggingObj === mesh) {
-                    setPosition(draggingObj)
-                }
-            })
-        }
+        },
     }
 }
 

@@ -4,6 +4,7 @@ export type DragEventData = { draggingObj?: BABYLON.AbstractMesh, pointerInfo: B
 
 /**
  * 注册拖拽事件发生器
+ * TODO 重构。并不是什么都需要什么什么“器”的
  */
 export function createDragController({scene, camera, canvas}: {
     scene: BABYLON.Scene,

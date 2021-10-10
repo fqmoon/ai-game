@@ -1,5 +1,6 @@
 import * as BABYLON from "babylonjs";
 
+export type PlanePos = [number, number]
 export type SlotPos = [number, number]
 export type SlotSize = [number, number]
 
@@ -30,13 +31,13 @@ export function createSlotManager({leftDownPosition, rightUpPosition, slotSize}:
     let occupy = 0
     let capacity = slotSize[0] * slotSize[1]
 
-    function calculatePosition(slotPos: [number, number]) {
+    function calculatePosition(slotPos: [number, number]): PlanePos {
         function interpolate(min: number, max: number, count: number, index: number) {
-            return (max - min) / count * index + min
+            return (max - min) / (count + 1) * (index + 1) + min
         }
 
-        let x = interpolate(leftDownPosition.x, rightUpPosition.x, slotSize[0], slotPos[0])
-        let y = interpolate(leftDownPosition.y, rightUpPosition.y, slotSize[1], slotPos[1])
+        let x = interpolate(leftDownPosition.x, rightUpPosition.x, slotSize[1], slotPos[1])
+        let y = interpolate(leftDownPosition.y, rightUpPosition.y, slotSize[0], slotPos[0])
         return [x, y]
     }
 
@@ -77,23 +78,29 @@ export function createSlotManager({leftDownPosition, rightUpPosition, slotSize}:
     }
 
     function put() {
-        let spacePos = findEmptySlot()
-        if (spacePos) {
-            let [row, col] = spacePos
+        let slotPos = findEmptySlot()
+        if (slotPos) {
+            let [row, col] = slotPos
             spaceMat[row][col] = true
             occupy += 1
-            return calculatePosition(spacePos)
+            return {
+                planePos: calculatePosition(slotPos),
+                slotPos,
+            }
         }
         return false
     }
 
     function pop() {
-        let spacePos = findOccupySlot()
-        if (spacePos) {
-            let [row, col] = spacePos
+        let slotPos = findOccupySlot()
+        if (slotPos) {
+            let [row, col] = slotPos
             spaceMat[row][col] = false
             occupy -= 1
-            return calculatePosition(spacePos)
+            return {
+                scenePos: calculatePosition(slotPos),
+                slotPos,
+            }
         }
         return false
     }

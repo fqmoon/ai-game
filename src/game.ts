@@ -1,6 +1,8 @@
 import * as BABYLON from "babylonjs";
 import {createSceneObjs} from "./sceneObjs";
 import {createDragController, DragEventData} from "./drag";
+import {Human} from "./human";
+import {Region} from "./region";
 
 export function createGame() {
     let canvas = document.getElementById("root") as HTMLCanvasElement
@@ -12,13 +14,63 @@ export function createGame() {
 
     let scene = new BABYLON.Scene(engine)
     let camera = createCamera(scene, canvas)
-    let dragController = createDragController({scene, camera, canvas})
     let sceneObjs = createSceneObjs({scene})
 
+    let ground = sceneObjs.ground
+    let region = sceneObjs.region
+
     for (const human of sceneObjs.humans) {
-        human.listenToDrag({dragController, ground: sceneObjs.ground})
+        human.updatePosition = () => {
+            let pos = ground.getGroundPosition()
+            if (pos) {
+                human.mesh.position = pos
+                human.mesh.position.y += 3
+            }
+        }
+        human.registerDrag({ground: sceneObjs.ground})
     }
-    sceneObjs.region.listenToDrag({dragController})
+    // register events
+    {
+        let humanMap = new Map<BABYLON.AbstractMesh, Human>()
+        for (const human of sceneObjs.humans) {
+            humanMap.set(human.mesh, human)
+        }
+
+        let curHuman: Human | undefined
+        let originPos = new BABYLON.Vector3()
+
+        scene.onPointerObservable.add((pointerInfo, eventState) => {
+            if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOWN) {
+                if (pointerInfo.pickInfo?.hit &&
+                    pointerInfo.pickInfo.pickedMesh) {
+
+                    curHuman = humanMap.get(pointerInfo.pickInfo.pickedMesh)
+                    if (curHuman) {
+                        originPos.copyFrom(curHuman.mesh.position)
+                        curHuman.isFollowPointer = true
+                        curHuman.updatePosition()
+                        camera.detachControl(canvas)
+
+                        region.updateColorByDrag(!!curHuman)
+                    }
+                }
+            } else if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERUP) {
+                if (curHuman) {
+                    if (!sceneObjs.region.putHuman(curHuman, originPos)) {
+                        curHuman.mesh.position.copyFrom(originPos)
+                    }
+
+                    curHuman.isFollowPointer = false
+                    camera.attachControl(canvas)
+                    curHuman = undefined
+
+                    region.updateColorByDrag(!!curHuman)
+                }
+            } else if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERMOVE) {
+                region.updateColorByDrag(!!curHuman)
+            }
+        })
+    }
 
     return {
         engine,
@@ -45,3 +97,10 @@ function createCamera(scene: BABYLON.Scene, canvas: HTMLElement) {
 }
 
 export type Game = ReturnType<typeof createGame>
+
+function dragProcedure({}: {
+    humans: Iterable<Human>,
+    region: Region,
+}) {
+
+}

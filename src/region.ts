@@ -1,11 +1,22 @@
 import {DragController} from "./drag";
-import {Ground} from "./ground";
 import * as BABYLON from "babylonjs"
+import {createSlotManager} from "./slot";
+import {Human} from "./human";
 
-export function createRegion({scene, position}: { scene: BABYLON.Scene, position: BABYLON.Vector3 }) {
+export interface PutEventData {
+    draggingObj?: BABYLON.AbstractMesh
+    regionPut: boolean
+}
+
+/**
+ * 主导用户交互，包括以颜色提示放置区域
+ */
+export function createRegion({scene, position, width, height,}: {
+    scene: BABYLON.Scene, position: BABYLON.Vector3, width: number, height: number
+}) {
     let mesh = BABYLON.MeshBuilder.CreatePlane("region", {
-        width: 10,
-        height: 20,
+        width,
+        height,
     }, scene)
     mesh.position = position
     let material = new BABYLON.StandardMaterial("", scene)
@@ -16,33 +27,51 @@ export function createRegion({scene, position}: { scene: BABYLON.Scene, position
     let selectedColor = new BABYLON.Color3(0.0, 1.0, 0.5)
     material.diffuseColor.copyFrom(originColor)
 
+    let slotManagers = {
+        'missionary': createSlotManager({
+            leftDownPosition: new BABYLON.Vector2(position.x - width * 0.5, position.z),
+            rightUpPosition: new BABYLON.Vector2(position.x + width * 0.5, position.z + height * 0.5),
+            slotSize: [1, 3],
+        }),
+        'cannibal': createSlotManager({
+            leftDownPosition: new BABYLON.Vector2(position.x - width * 0.5, position.z - height * 0.5),
+            rightUpPosition: new BABYLON.Vector2(position.x + width * 0.5, position.z),
+            slotSize: [1, 3],
+        }),
+    }
+
+    let onPutObservable = new BABYLON.Observable<PutEventData>()
+
+    function isPick() {
+        let res = scene.pick(scene.pointerX, scene.pointerY, m => m === mesh)
+        return res?.hit
+    }
+
     return {
         mesh,
-        // 监听拖拽然后变色
-        listenToDrag: ({dragController}: { dragController: DragController }) => {
-            function setColor() {
-                let res = scene.pick(scene.pointerX, scene.pointerY, m => m === mesh)
-                if (res?.hit) {
-                    material.diffuseColor.copyFrom(selectedColor)
-                } else {
-                    material.diffuseColor.copyFrom(promoteColor)
+        onPutObservable,
+        putHuman(human: Human, originPos: BABYLON.Vector3) {
+            if (isPick()) {
+                let res = slotManagers[human.identity].put()
+                if (res) {
+                    human.mesh.position.x = res.planePos[0]
+                    human.mesh.position.y = originPos.y
+                    human.mesh.position.z = res.planePos[1]
                 }
-            }
 
-            // 变色
-            dragController.onDragStartObservable.add(({draggingObj, pointerInfo}) => {
-                setColor()
-            })
-            // 变回原来的颜色
-            dragController.onDragEndObservable.add(({draggingObj, pointerInfo}) => {
-                material.diffuseColor.copyFrom(originColor)
-            })
-            // 变色
-            dragController.onDragMoveObservable.add(({draggingObj, pointerInfo}) => {
-                setColor()
-            })
+                return true
+            }
+            return false
         },
-        // TODO 另外有一个放置位置的系统，其可以引导物体放置位置
+        updateColorByDrag(dragging: boolean) {
+            if (!dragging) {
+                material.diffuseColor.copyFrom(originColor)
+            } else if (isPick()) {
+                material.diffuseColor.copyFrom(selectedColor)
+            } else {
+                material.diffuseColor.copyFrom(promoteColor)
+            }
+        },
     }
 }
 
