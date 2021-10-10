@@ -18,6 +18,7 @@ export function createGame() {
     for (const human of sceneObjs.humans) {
         human.listenToDrag({dragController, ground: sceneObjs.ground})
     }
+    sceneObjs.region.listenToDrag({dragController})
 
     return {
         engine,

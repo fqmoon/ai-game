@@ -75,20 +75,6 @@ game.start()
 //     }
 // })
 //
-// function createRegion(position: BABYLON.Vector3) {
-//     let region = BABYLON.MeshBuilder.CreatePlane("region", {
-//         width: 10,
-//         height: 20,
-//     }, scene)
-//     region.position = position
-//     region.material = new BABYLON.StandardMaterial("", scene)
-//     region.rotation.x = Math.PI * 0.5
-//     // @ts-ignore
-//     // TODO 并不透明
-//     region.material.diffuseColor = new BABYLON.Color4(0.0, 0.5, 0.5, 0.5)
-//
-//     return region
-// }
 //
 // // 左岸
 // let leftBank = {

@@ -1,6 +1,7 @@
 import * as BABYLON from "babylonjs";
 import {createHuman, Human} from "./human";
 import {createGround} from "./ground";
+import {createRegion} from "./region";
 
 export function createSceneObjs({scene}: { scene: BABYLON.Scene }) {
     function createSkyLight() {
@@ -39,11 +40,14 @@ export function createSceneObjs({scene}: { scene: BABYLON.Scene }) {
     let humans = new Set<Human>()
     humans.add(human)
 
+    let region = createRegion({scene, position: new BABYLON.Vector3(20, 0.01, 0)})
+
     return {
         shadowGenerator,
         humans,
         ground,
         skyLight,
+        region,
     }
 }
 

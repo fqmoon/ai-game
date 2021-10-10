@@ -23,23 +23,29 @@ export function createHuman({scene}: { scene: BABYLON.Scene }) {
         listenToDrag: ({dragController, ground}: { dragController: DragController, ground: Ground }) => {
             dragController.toDrags.add(mesh)
             let originPos = new BABYLON.Vector3()
+
+            function setPosition(draggingObj: BABYLON.AbstractMesh) {
+                let pos = ground.getGroundPosition()
+                if (pos) {
+                    draggingObj.position = pos
+                    draggingObj.position.y += 3
+                }
+            }
+
             dragController.onDragStartObservable.add(({draggingObj, pointerInfo}) => {
-                if (draggingObj == mesh) {
+                if (draggingObj === mesh) {
                     originPos.copyFrom(mesh.position)
+                    setPosition(draggingObj)
                 }
             })
             dragController.onDragEndObservable.add(({draggingObj, pointerInfo}) => {
-                if (draggingObj == mesh) {
+                if (draggingObj === mesh) {
                     mesh.position = originPos
                 }
             })
             dragController.onDragMoveObservable.add(({draggingObj, pointerInfo}) => {
-                if (draggingObj == mesh) {
-                    let pos = ground.getGroundPosition()
-                    if (pos) {
-                        draggingObj.position = pos
-                        draggingObj.position.y += 3
-                    }
+                if (draggingObj === mesh) {
+                    setPosition(draggingObj)
                 }
             })
         }
