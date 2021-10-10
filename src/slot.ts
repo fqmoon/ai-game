@@ -91,10 +91,10 @@ export function createSlotManager({leftDownPosition, rightUpPosition, slotSize}:
         return false
     }
 
-    function pop() {
-        let slotPos = findOccupySlot()
-        if (slotPos) {
-            let [row, col] = slotPos
+    function pop(slotPos: SlotPos) {
+        let [row, col] = slotPos
+        let slot = spaceMat[row][col]
+        if (slot) {
             spaceMat[row][col] = false
             occupy -= 1
             return {
@@ -119,10 +119,22 @@ export function createSlotManager({leftDownPosition, rightUpPosition, slotSize}:
         }
     }
 
+    function print() {
+        let str = ''
+        for (let row = 0; row < slotSize[0]; row++) {
+            for (let col = 0; col < slotSize[1]; col++) {
+                str += spaceMat[row][col] ? '1 ' : ' 0'
+            }
+            str += '\n'
+        }
+        console.log(str)
+    }
+
     return {
         put,
         pop,
         arrange,
+        print,
     }
 }
 

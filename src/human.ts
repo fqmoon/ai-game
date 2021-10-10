@@ -1,5 +1,6 @@
 import * as BABYLON from "babylonjs";
 import {Ground} from "./ground";
+import {SlotManager, SlotPos} from "./slot";
 
 export type HumanIdentity = 'missionary' | 'cannibal'
 
@@ -23,11 +24,16 @@ export function createHuman({scene, position, identity}: {
     let _isFollowPointer = false
     let _updatePosition: () => any = () => null
 
+    type SlotManager_ = SlotManager | undefined
+    type SlotPos_ = SlotPos | undefined
+
     return {
         mesh,
         identity,
         // 离地面高度
         yOff: 0.5,
+        slotManager: undefined as SlotManager_,
+        slotPos: undefined as SlotPos_,
         get isFollowPointer() {
             return _isFollowPointer
         },

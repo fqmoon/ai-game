@@ -1,7 +1,6 @@
 import * as BABYLON from "babylonjs";
 import {createSceneObjs} from "./sceneObjs";
 import {Human} from "./human";
-import {Region} from "./region";
 import {createStageManager} from "./stage";
 
 export function createGame() {
@@ -31,17 +30,20 @@ export function createGame() {
         human.registerDrag({ground: sceneObjs.ground})
     }
 
-    stages.onBeforeStageChangeObservable.add(
-        ({curStageType, lastStageType, nextStageType}) => {
-            // TODO 测试用，后面改
-            if (curStageType === undefined && nextStageType === 'leftBank') {
-                // 将human放入slot，进行初始化
-                for (const human of sceneObjs.humans) {
-                    regions.leftBank.putHuman(human)
+    // stage test
+    {
+        stages.onBeforeStageChangeObservable.add(
+            ({curStageType, lastStageType, nextStageType}) => {
+                // TODO 测试用，后面改
+                if (curStageType === undefined && nextStageType === 'leftBank') {
+                    // 将human放入slot，进行初始化
+                    for (const human of sceneObjs.humans) {
+                        regions.leftBank.putHuman(human)
+                    }
                 }
-            }
-        })
-    stages.change('leftBank')
+            })
+        stages.change('leftBank')
+    }
 
     // register events
     {
@@ -115,10 +117,3 @@ function createCamera(scene: BABYLON.Scene, canvas: HTMLElement) {
 }
 
 export type Game = ReturnType<typeof createGame>
-
-function dragProcedure({}: {
-    humans: Iterable<Human>,
-    region: Region,
-}) {
-
-}

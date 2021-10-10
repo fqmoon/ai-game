@@ -50,23 +50,27 @@ export function createRegion({scene, position, width, height,}: {
         mesh,
         onPutObservable,
         putHuman(human: Human) {
-            let res = slotManagers[human.identity].put()
+            let newSlotManager = slotManagers[human.identity]
+            // 同一个slotManager
+            if (newSlotManager === human.slotManager)
+                return false
+
+            let res = newSlotManager.put()
             if (res) {
                 human.mesh.position.x = res.planePos[0]
+                human.mesh.position.y = human.yOff
                 human.mesh.position.z = res.planePos[1]
+
+                if (human.slotPos && human.slotManager)
+                    human.slotManager.pop(human.slotPos)
+                human.slotManager = newSlotManager
+                human.slotPos = res.slotPos
             }
             return !!res
         },
         putHumanByDrag(human: Human) {
             if (isPick()) {
-                let res = slotManagers[human.identity].put()
-                if (res) {
-                    human.mesh.position.x = res.planePos[0]
-                    human.mesh.position.y = human.yOff
-                    human.mesh.position.z = res.planePos[1]
-                }
-
-                return true
+                return this.putHuman(human)
             }
             return false
         },
