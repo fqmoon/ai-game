@@ -49,7 +49,15 @@ export function createRegion({scene, position, width, height,}: {
     return {
         mesh,
         onPutObservable,
-        putHuman(human: Human, originPos: BABYLON.Vector3) {
+        putHuman(human: Human) {
+            let res = slotManagers[human.identity].put()
+            if (res) {
+                human.mesh.position.x = res.planePos[0]
+                human.mesh.position.z = res.planePos[1]
+            }
+            return !!res
+        },
+        putHumanByDrag(human: Human, originPos: BABYLON.Vector3) {
             if (isPick()) {
                 let res = slotManagers[human.identity].put()
                 if (res) {

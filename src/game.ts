@@ -2,6 +2,7 @@ import * as BABYLON from "babylonjs";
 import {createSceneObjs} from "./sceneObjs";
 import {Human} from "./human";
 import {Region} from "./region";
+import {createStageManager} from "./stage";
 
 export function createGame() {
     let canvas = document.getElementById("root") as HTMLCanvasElement
@@ -14,6 +15,7 @@ export function createGame() {
     let scene = new BABYLON.Scene(engine)
     let camera = createCamera(scene, canvas)
     let sceneObjs = createSceneObjs({scene})
+    let stages = createStageManager()
 
     let ground = sceneObjs.ground
     let regions = sceneObjs.regions
@@ -28,6 +30,19 @@ export function createGame() {
         }
         human.registerDrag({ground: sceneObjs.ground})
     }
+
+    stages.onBeforeStageChangeObservable.add(
+        ({curStageType, lastStageType, nextStageType}) => {
+            // TODO 测试用，后面改
+            if (curStageType === undefined && nextStageType === 'leftBank') {
+                // 将human放入slot，进行初始化
+                for (const human of sceneObjs.humans) {
+                    regions.leftBank.putHuman(human)
+                }
+            }
+        })
+    stages.change('leftBank')
+
     // register events
     {
         let humanMap = new Map<BABYLON.AbstractMesh, Human>()
@@ -56,8 +71,8 @@ export function createGame() {
                 }
             } else if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERUP) {
                 if (curHuman) {
-                    if (!sceneObjs.regions.leftBank.putHuman(curHuman, originPos)
-                        && !sceneObjs.regions.boat.putHuman(curHuman, originPos)) {
+                    if (!sceneObjs.regions.leftBank.putHumanByDrag(curHuman, originPos)
+                        && !sceneObjs.regions.boat.putHumanByDrag(curHuman, originPos)) {
                         curHuman.mesh.position.copyFrom(originPos)
                     }
 
