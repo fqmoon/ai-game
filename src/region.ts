@@ -9,11 +9,6 @@ import {
 } from "./human";
 import {GameEvents, GameStatus} from "./game";
 
-export interface PutEventData {
-    draggingObj?: BABYLON.AbstractMesh
-    regionPut: boolean
-}
-
 /**
  * 主导用户交互，包括以颜色提示放置区域
  */

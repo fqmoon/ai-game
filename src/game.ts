@@ -32,7 +32,6 @@ export function createGame() {
     // 全局事件处理
     let gameEvents = new BABYLON.Observable() as GameEvents
     let gameStatus: GameStatus = {
-        // TODO
         // @ts-ignore
         humanDrag: {
             active: true,
@@ -57,7 +56,7 @@ export function createGame() {
     let ground = sceneObjs.ground
     let regions = sceneObjs.regions
 
-    // TODO 新的事件驱动编程
+    // 初始化
     {
         gameStatus.humanDrag.targetRegions.add(regions.leftBank)
         gameStatus.humanDrag.targetRegions.add(regions.boat)
