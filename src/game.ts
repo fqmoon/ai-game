@@ -2,11 +2,11 @@ import * as BABYLON from "babylonjs";
 import {createSceneObjs} from "./sceneObjs";
 import {Human, HumanDragAfterEndEvent, HumanDragBeforeEndEvent, HumanDragMoveEvent, HumanDragStartEvent} from "./human";
 import {Region} from "./region";
-import {PointMoveOnGroundEvent} from "./ground";
+import {PointerOnGroundEvent} from "./ground";
 import {createCamera} from "./camera";
 
 export type GameEventData =
-    PointMoveOnGroundEvent
+    PointerOnGroundEvent
     | HumanDragStartEvent
     | HumanDragBeforeEndEvent
     | HumanDragMoveEvent

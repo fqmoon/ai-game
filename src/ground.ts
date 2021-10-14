@@ -1,10 +1,11 @@
 import * as BABYLON from "babylonjs";
 import {GameEvents, GameStatus} from "./game";
+import {HumanDragStartEventType} from "./human";
 
-export const PointMoveOnGroundEventType = "PointMoveOnGroundEvent"
+export const PointerOnGroundEventType = "PointerOnGroundEvent"
 
-export interface PointMoveOnGroundEvent {
-    type: typeof PointMoveOnGroundEventType
+export interface PointerOnGroundEvent {
+    type: typeof PointerOnGroundEventType
     pos: BABYLON.Vector3
 }
 
@@ -33,18 +34,27 @@ export function createGround({scene, gameEvents, gameStatus}: {
         getGroundPosition: getPointerPositionOnGround,
     }
 
+    function setMsg() {
+        let pos = getPointerPositionOnGround()
+        if (pos) {
+            gameEvents.notifyObservers({
+                type: PointerOnGroundEventType,
+                pos,
+            })
+        }
+    }
+
     // 在鼠标移动时发送
     scene.onPointerObservable.add((eventData, eventState) => {
         if (eventData.type === BABYLON.PointerEventTypes.POINTERMOVE && gameStatus.humanDrag.active) {
-            let pos = getPointerPositionOnGround()
-            if (pos) {
-                gameEvents.notifyObservers({
-                    type: PointMoveOnGroundEventType,
-                    pos,
-                })
-            }
+            setMsg()
         }
     })
+    gameEvents.add(((eventData, eventState) => {
+        if (eventData.type === HumanDragStartEventType) {
+            setMsg()
+        }
+    }))
 
     return ground
 }

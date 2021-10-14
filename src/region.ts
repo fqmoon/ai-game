@@ -62,7 +62,6 @@ export function createRegion({scene, position, width, height, gameStatus, gameEv
 
         if (eventData.type === HumanDragStartEventType || eventData.type === HumanDragMoveEventType) {
             if (isPick()) {
-
                 region.setColorByDrag("reach")
             } else {
                 region.setColorByDrag("notReach")

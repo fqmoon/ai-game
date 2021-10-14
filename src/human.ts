@@ -1,5 +1,5 @@
 import * as BABYLON from "babylonjs";
-import {PointMoveOnGroundEventType} from "./ground";
+import {PointerOnGroundEventType} from "./ground";
 import {SlotManager, SlotPos} from "./slot";
 import {Region} from "./region";
 import {GameEvents, GameStatus} from "./game";
@@ -16,6 +16,7 @@ export interface HumanMesh extends BABYLON.AbstractMesh {
 export interface Human {
     mesh: HumanMesh
     yOff: number
+    dragYOff: number
     identity: HumanIdentity
     slotManager?: SlotManager
     slotPos?: SlotPos
@@ -72,12 +73,13 @@ export function createHuman({scene, position, identity, gameEvents, gameStatus}:
         identity,
         // 离地面高度
         yOff: 0.5,
+        dragYOff: 3,
         slotManager: undefined,
         slotPos: undefined,
         region: undefined,
         setPos(pos: BABYLON.Vector3) {
             mesh.position.copyFrom(pos)
-            mesh.position.y += human.yOff
+            mesh.position.y += human.dragYOff
         },
         setPosByPlanePos(planePos: BABYLON.Vector2) {
             mesh.position.x = planePos.x
@@ -92,7 +94,7 @@ export function createHuman({scene, position, identity, gameEvents, gameStatus}:
 
     // 拖动时根据地形位置更新human位置
     gameEvents.add((eventData, eventState) => {
-        if (eventData.type === PointMoveOnGroundEventType
+        if (eventData.type === PointerOnGroundEventType
             && gameStatus.humanDrag.active
             && gameStatus.humanDrag.dragging
             && gameStatus.humanDrag.human === human) {
@@ -105,10 +107,9 @@ export function createHuman({scene, position, identity, gameEvents, gameStatus}:
         let dragInfo = gameStatus.humanDrag
         if (dragInfo.reachedRegion) { // 放置成功
             dragInfo.reachedRegion.putHuman(human)
-            human.region?.resetHumanPos(human)
-        } else { // 放置失败
-            human.region?.resetHumanPos(human)
         }
+        // 放置成功或失败都重置一下位置
+        human.region?.resetHumanPos(human)
     }
 
     // 拖动
@@ -134,7 +135,6 @@ export function createHuman({scene, position, identity, gameEvents, gameStatus}:
                 }
             }
         } else if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERUP) {
-            console.log("GGG")
             if (dragInfo.human === human) {
                 gameEvents.notifyObservers({
                     type: HumanDragBeforeEndEventType,
@@ -142,12 +142,11 @@ export function createHuman({scene, position, identity, gameEvents, gameStatus}:
 
                 putIntoRegion()
 
-                gameStatus.humanDrag = {
-                    ...dragInfo,
+                Object.assign(dragInfo, {
                     dragging: false,
                     human: undefined,
-                }
-                dragInfo.reachedRegion = undefined
+                    reachedRegion: undefined,
+                })
 
                 gameEvents.notifyObservers({
                     type: HumanDragAfterEndEventType,
