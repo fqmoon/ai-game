@@ -1,6 +1,6 @@
 import * as BABYLON from "babylonjs";
 
-export type PlanePos = [number, number]
+export type PlanePos = BABYLON.Vector2
 export type SlotPos = [number, number]
 export type SlotSize = [number, number]
 
@@ -38,7 +38,7 @@ export function createSlotManager({leftDownPosition, rightUpPosition, slotSize}:
 
         let x = interpolate(leftDownPosition.x, rightUpPosition.x, slotSize[1], slotPos[1])
         let y = interpolate(leftDownPosition.y, rightUpPosition.y, slotSize[0], slotPos[0])
-        return [x, y]
+        return new BABYLON.Vector2(x, y)
     }
 
     function isEmpty() {
@@ -119,7 +119,7 @@ export function createSlotManager({leftDownPosition, rightUpPosition, slotSize}:
         }
     }
 
-    function print() {
+    function toString() {
         let str = ''
         for (let row = 0; row < slotSize[0]; row++) {
             for (let col = 0; col < slotSize[1]; col++) {
@@ -127,14 +127,14 @@ export function createSlotManager({leftDownPosition, rightUpPosition, slotSize}:
             }
             str += '\n'
         }
-        console.log(str)
+        return str
     }
 
     return {
         put,
         pop,
         arrange,
-        print,
+        toString,
     }
 }
 

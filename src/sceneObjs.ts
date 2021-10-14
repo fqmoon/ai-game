@@ -2,8 +2,12 @@ import * as BABYLON from "babylonjs";
 import {createHuman, Human} from "./human";
 import {createGround} from "./ground";
 import {createRegion, Region} from "./region";
+import {GameEvents, GameStatus} from "./game";
 
-export function createSceneObjs({scene}: { scene: BABYLON.Scene }) {
+export function createSceneObjs({scene, gameStatus, gameEvents}: {
+    scene: BABYLON.Scene,
+    gameEvents: GameEvents, gameStatus: GameStatus,
+}) {
     function createSkyLight() {
         const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
         return light
@@ -28,19 +32,23 @@ export function createSceneObjs({scene}: { scene: BABYLON.Scene }) {
     }
 
     let skyLight = createSkyLight()
-    let ground = createGround({scene})
+    let ground = createGround({scene, gameStatus, gameEvents,})
 
     let humans = new Set<Human>()
     for (let i = 0; i < 3; i++) {
         humans.add(createHuman({
             scene, identity: 'missionary',
             position: new BABYLON.Vector3(0, 0.5, 0),
+            gameStatus,
+            gameEvents,
         }))
     }
     for (let i = 0; i < 3; i++) {
         humans.add(createHuman({
             scene, identity: 'cannibal',
             position: new BABYLON.Vector3(0, 0.5, 0),
+            gameStatus,
+            gameEvents,
         }))
     }
 
@@ -58,18 +66,24 @@ export function createSceneObjs({scene}: { scene: BABYLON.Scene }) {
             position: new BABYLON.Vector3(-30, 0.01, 0),
             width: 20,
             height: 40,
+            gameStatus,
+            gameEvents,
         }),
         rightBank: createRegion({
             scene,
             position: new BABYLON.Vector3(30, 0.01, 0),
             width: 20,
             height: 40,
+            gameStatus,
+            gameEvents,
         }),
         boat: createRegion({
             scene,
             position: new BABYLON.Vector3(0, 0.01, 0),
             width: 20,
             height: 40,
+            gameStatus,
+            gameEvents,
         }),
     }
 
