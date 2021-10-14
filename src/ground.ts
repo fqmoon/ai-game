@@ -34,7 +34,7 @@ export function createGround({scene, gameEvents, gameStatus}: {
         getGroundPosition: getPointerPositionOnGround,
     }
 
-    function setMsg() {
+    function sendMsg() {
         let pos = getPointerPositionOnGround()
         if (pos) {
             gameEvents.notifyObservers({
@@ -44,15 +44,19 @@ export function createGround({scene, gameEvents, gameStatus}: {
         }
     }
 
-    // 在鼠标移动时发送
+    // 在拖拽移动时发送
     scene.onPointerObservable.add((eventData, eventState) => {
-        if (eventData.type === BABYLON.PointerEventTypes.POINTERMOVE && gameStatus.humanDrag.active) {
-            setMsg()
+        if (eventData.type === BABYLON.PointerEventTypes.POINTERMOVE
+            && gameStatus.humanDrag.active
+            && gameStatus.humanDrag.dragging
+        ) {
+            sendMsg()
         }
     })
+    // 在拖拽开始时发送
     gameEvents.add(((eventData, eventState) => {
         if (eventData.type === HumanDragStartEventType) {
-            setMsg()
+            sendMsg()
         }
     }))
 
