@@ -28,13 +28,6 @@ export function createGround({scene, gameEvents, gameStatus}: {
         }
     }
 
-    // todo  更新human位置，由谁来做比较合理？
-    // human和ground没有依赖性
-    // Human和slot有依赖性
-    // todo 这里是事件
-    // 如果弄成事件，应该是外部来做？这样不成了global么
-    // 还是local化。封装不只是行为和数据的绑定，还有local化
-
     let ground = {
         mesh,
         getGroundPosition: getPointerPositionOnGround,

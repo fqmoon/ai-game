@@ -5,12 +5,12 @@ import {Region} from "./region";
 import {PointMoveOnGroundEvent} from "./ground";
 import {createCamera} from "./camera";
 
-export type GameEventData = {
-    type: "regionPut",
-} | {
-    type: "regionPop"
-} | PointMoveOnGroundEvent | HumanDragStartEvent | HumanDragBeforeEndEvent | HumanDragMoveEvent | HumanDragAfterEndEvent
-type GameEventTypes = "regionPut" | "regionPop"
+export type GameEventData =
+    PointMoveOnGroundEvent
+    | HumanDragStartEvent
+    | HumanDragBeforeEndEvent
+    | HumanDragMoveEvent
+    | HumanDragAfterEndEvent
 export type GameEvents = BABYLON.Observable<GameEventData>
 
 export interface GameStatus {
@@ -67,58 +67,6 @@ export function createGame() {
             regions.leftBank.putHuman(human)
         }
     }
-
-    // register events
-    // {
-    //     scene.onPointerObservable.add((pointerInfo, eventState) => {
-    //         if (!gameStatus.humanDrag.active)
-    //             return
-    //
-    //         if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOWN) {
-    //             if (pointerInfo.pickInfo?.hit &&
-    //                 pointerInfo.pickInfo.pickedMesh) {
-    //
-    //                 let dragInfo = gameStatus.humanDrag
-    //
-    //                 let pickedMesh = pointerInfo.pickInfo.pickedMesh
-    //                 if (pickedMesh.metadata?.gameObjType === "Human") {
-    //                     let human = pickedMesh.metadata?.gameObj as Human
-    //                     if (human) {
-    //                         dragInfo.human = human
-    //                         dragInfo.dragging = true
-    //
-    //                         camera.detachControl(canvas)
-    //
-    //                         // TODO 修改成非特例，根据status来
-    //                         regions.leftBank.updateColorByDrag(!!human)
-    //                         regions.boat.updateColorByDrag(!!human)
-    //                     }
-    //                 }
-    //             }
-    //         } else if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERUP) {
-    //             if (gameStatus.humanDrag.dragging) {
-    //                 let dragInfo = gameStatus.humanDrag
-    //                 let human = dragInfo.human
-    //
-    //                 camera.attachControl(canvas)
-    //
-    //                 // todo
-    //                 regions.leftBank.updateColorByDrag(!!human)
-    //                 regions.boat.updateColorByDrag(!!human)
-    //
-    //                 gameStatus.humanDrag = {
-    //                     ...dragInfo,
-    //                     dragging: false,
-    //                     human: undefined,
-    //                 }
-    //             }
-    //         } else if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERMOVE) {
-    //             let dragging = gameStatus.humanDrag.dragging
-    //             regions.leftBank.updateColorByDrag(dragging)
-    //             regions.boat.updateColorByDrag(dragging)
-    //         }
-    //     })
-    // }
 
     return {
         events: gameEvents,

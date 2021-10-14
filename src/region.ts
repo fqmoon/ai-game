@@ -1,7 +1,6 @@
 import * as BABYLON from "babylonjs"
 import {createSlotManager, SlotManager} from "./slot";
 import {
-    createHuman,
     Human,
     HumanDragBeforeEndEventType,
     HumanDragMoveEventType,
