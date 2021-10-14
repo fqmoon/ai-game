@@ -1,6 +1,6 @@
 import * as BABYLON from "babylonjs";
 import {createSceneObjs} from "./sceneObjs";
-import {Human, HumanDragEndEvent, HumanDragMoveEvent, HumanDragStartEvent} from "./human";
+import {Human, HumanDragAfterEndEvent, HumanDragBeforeEndEvent, HumanDragMoveEvent, HumanDragStartEvent} from "./human";
 import {Region} from "./region";
 import {PointMoveOnGroundEvent} from "./ground";
 import {createCamera} from "./camera";
@@ -9,7 +9,7 @@ export type GameEventData = {
     type: "regionPut",
 } | {
     type: "regionPop"
-} | PointMoveOnGroundEvent | HumanDragStartEvent | HumanDragEndEvent | HumanDragMoveEvent
+} | PointMoveOnGroundEvent | HumanDragStartEvent | HumanDragBeforeEndEvent | HumanDragMoveEvent | HumanDragAfterEndEvent
 type GameEventTypes = "regionPut" | "regionPop"
 export type GameEvents = BABYLON.Observable<GameEventData>
 

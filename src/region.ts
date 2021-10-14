@@ -1,6 +1,13 @@
 import * as BABYLON from "babylonjs"
 import {createSlotManager, SlotManager} from "./slot";
-import {Human, HumanDragEndEventType, HumanDragMoveEventType, HumanDragStartEventType, HumanIdentity} from "./human";
+import {
+    createHuman,
+    Human,
+    HumanDragBeforeEndEventType,
+    HumanDragMoveEventType,
+    HumanDragStartEventType,
+    HumanIdentity
+} from "./human";
 import {GameEvents, GameStatus} from "./game";
 
 export interface PutEventData {
@@ -56,29 +63,18 @@ export function createRegion({scene, position, width, height, gameStatus, gameEv
 
         if (eventData.type === HumanDragStartEventType || eventData.type === HumanDragMoveEventType) {
             if (isPick()) {
-                dragInfo.reachedRegion = region
+
                 region.setColorByDrag("reach")
             } else {
                 region.setColorByDrag("notReach")
             }
-        } else if (eventData.type === HumanDragEndEventType) {
+        } else if (eventData.type === HumanDragBeforeEndEventType) {
+            if (isPick()) {
+                // 更新选中的region
+                dragInfo.reachedRegion = region
+            }
             region.setColorByDrag("noDrag")
         }
-    }))
-
-    // 在拖拽结束时放置human
-    gameEvents.add(((eventData, eventState) => {
-        let dragInfo = gameStatus.humanDrag
-        if (!dragInfo.dragging
-            // 持有human的region才响应该事件
-            || dragInfo.reachedRegion !== region)
-            return
-
-        if (eventData.type === HumanDragEndEventType) {
-            dragInfo.reachedRegion.putHumanByDrag(dragInfo.human)
-        }
-        // TODO 放置失败还原
-
     }))
 
     let region = {
@@ -119,6 +115,12 @@ export function createRegion({scene, position, width, height, gameStatus, gameEv
             human.slotManager = undefined
             human.slotPos = undefined
             human.region = undefined
+        },
+        resetHumanPos(human: Human) {
+            if (human.region !== region || !human.slotManager || !human.slotPos)
+                return false
+
+            human.setPosByPlanePos(human.slotManager.slotPosToPlanePos(human.slotPos))
         },
         putHumanByDrag(human: Human) {
             if (isPick()) {

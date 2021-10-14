@@ -27,15 +27,20 @@ export interface Human {
 }
 
 export const HumanDragStartEventType = "HumanDragStartEvent"
-export const HumanDragEndEventType = "HumanDragEndEvent"
+export const HumanDragBeforeEndEventType = "HumanDragBeforeEndEvent"
+export const HumanDragAfterEndEventType = "HumanDragAfterEndEvent"
 export const HumanDragMoveEventType = "HumanDragMoveEvent"
 
 export interface HumanDragStartEvent {
     type: typeof HumanDragStartEventType
 }
 
-export interface HumanDragEndEvent {
-    type: typeof HumanDragEndEventType
+export interface HumanDragBeforeEndEvent {
+    type: typeof HumanDragBeforeEndEventType
+}
+
+export interface HumanDragAfterEndEvent {
+    type: typeof HumanDragAfterEndEventType
 }
 
 export interface HumanDragMoveEvent {
@@ -79,7 +84,7 @@ export function createHuman({scene, position, identity, gameEvents, gameStatus}:
             mesh.position.y = human.yOff
             mesh.position.z = planePos.y
         },
-    }
+    } as Human
     mesh.metadata = {
         gameObj: human,
         gameObjType: "Human",
@@ -96,6 +101,16 @@ export function createHuman({scene, position, identity, gameEvents, gameStatus}:
         }
     })
 
+    function putIntoRegion() {
+        let dragInfo = gameStatus.humanDrag
+        if (dragInfo.reachedRegion) { // 放置成功
+            dragInfo.reachedRegion.putHuman(human)
+            human.region?.resetHumanPos(human)
+        } else { // 放置失败
+            human.region?.resetHumanPos(human)
+        }
+    }
+
     // 拖动
     scene.onPointerObservable.add((pointerInfo, eventState) => {
         if (!gameStatus.humanDrag.active)
@@ -111,29 +126,32 @@ export function createHuman({scene, position, identity, gameEvents, gameStatus}:
                 if (pickedMesh === mesh) {
                     dragInfo.human = human
                     dragInfo.dragging = true
+                    dragInfo.reachedRegion = undefined
 
                     gameEvents.notifyObservers({
                         type: HumanDragStartEventType,
                     })
-
-                    // TODO 修改成非特例，根据status来
-                    // dragInfo.dstRegion.updateColorByDrag(true)
                 }
             }
         } else if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERUP) {
+            console.log("GGG")
             if (dragInfo.human === human) {
-                // todo
-                // dragInfo.dstRegion.updateColorByDrag(false)
-
                 gameEvents.notifyObservers({
-                    type: HumanDragEndEventType,
+                    type: HumanDragBeforeEndEventType,
                 })
+
+                putIntoRegion()
 
                 gameStatus.humanDrag = {
                     ...dragInfo,
                     dragging: false,
                     human: undefined,
                 }
+                dragInfo.reachedRegion = undefined
+
+                gameEvents.notifyObservers({
+                    type: HumanDragAfterEndEventType,
+                })
             }
         } else if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERMOVE) {
             if (dragInfo.human === human) {
@@ -141,8 +159,6 @@ export function createHuman({scene, position, identity, gameEvents, gameStatus}:
                     type: HumanDragMoveEventType,
                 })
             }
-            // regions.leftBank.updateColorByDrag(dragging)
-            // regions.boat.updateColorByDrag(dragging)
         }
     })
 

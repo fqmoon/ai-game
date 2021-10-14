@@ -1,6 +1,6 @@
 import * as BABYLON from "babylonjs";
 import {GameEvents, GameStatus} from "./game";
-import {HumanDragEndEventType, HumanDragStartEventType} from "./human";
+import {HumanDragBeforeEndEventType, HumanDragStartEventType} from "./human";
 
 export function createCamera({scene, canvas, gameStatus, gameEvents}: {
     scene: BABYLON.Scene, canvas: HTMLElement,
@@ -15,7 +15,7 @@ export function createCamera({scene, canvas, gameStatus, gameEvents}: {
     gameEvents.add((eventData, eventState) => {
         if (eventData.type === HumanDragStartEventType) {
             camera.detachControl()
-        } else if (eventData.type === HumanDragEndEventType) {
+        } else if (eventData.type === HumanDragBeforeEndEventType) {
             camera.attachControl()
         }
     })

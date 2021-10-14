@@ -135,6 +135,7 @@ export function createSlotManager({leftDownPosition, rightUpPosition, slotSize}:
         pop,
         arrange,
         toString,
+        slotPosToPlanePos: calculatePosition,
     }
 }
 
