@@ -4,6 +4,7 @@ import {Human, HumanDragAfterEndEvent, HumanDragBeforeEndEvent, HumanDragMoveEve
 import {Region} from "./region";
 import {PointerOnGroundEvent} from "./ground";
 import {createCamera} from "./camera";
+import {createGUI} from "./gui";
 
 export type GameEventData =
     PointerOnGroundEvent
@@ -52,6 +53,7 @@ export function createGame() {
     let scene = new BABYLON.Scene(engine)
     let camera = createCamera({scene, canvas, gameStatus, gameEvents})
     let sceneObjs = createSceneObjs({scene, gameStatus, gameEvents})
+    let gui = createGUI({scene, gameStatus, gameEvents})
 
     let ground = sceneObjs.ground
     let regions = sceneObjs.regions
