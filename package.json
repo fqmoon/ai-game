@@ -11,7 +11,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "babylonjs": "^4.2.0"
+    "babylonjs": "^4.2.0",
+    "babylonjs-gui": "^4.2.0"
   },
   "devDependencies": {
     "html-webpack-plugin": "^5.3.2",
