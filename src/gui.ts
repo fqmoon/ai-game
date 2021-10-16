@@ -15,7 +15,7 @@ function createBoatLeaveButton({gameStatus, gameEvents, boat, humans}: {
     gameEvents: GameEvents, gameStatus: GameStatus, boat: Region, humans: Iterable<Human>,
 }) {
     let button = $.parseHTML(`<button 
-            disabled=true
+            disabled
             style="position: absolute;bottom: 0;margin: 1em; left: 50%;transform: translateX(-50%)"
         >开船</button>`)[0] as HTMLButtonElement
 
