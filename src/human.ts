@@ -118,6 +118,8 @@ export function createHuman({scene, position, identity, gameEvents, gameStatus}:
             return
 
         let dragInfo = gameStatus.humanDrag
+        if (!human.region || !dragInfo.targetRegions.has(human.region))
+            return
 
         if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOWN) {
             if (pointerInfo.pickInfo?.hit &&

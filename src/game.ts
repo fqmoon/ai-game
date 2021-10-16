@@ -4,7 +4,7 @@ import {Human, HumanDragAfterEndEvent, HumanDragBeforeEndEvent, HumanDragMoveEve
 import {Region} from "./region";
 import {PointerOnGroundEvent} from "./ground";
 import {createCamera} from "./camera";
-import {createGUI} from "./gui";
+import {BoatLeaveEvent, BoatLeaveEventType, createGUI} from "./gui";
 
 export type GameEventData =
     PointerOnGroundEvent
@@ -12,6 +12,7 @@ export type GameEventData =
     | HumanDragBeforeEndEvent
     | HumanDragMoveEvent
     | HumanDragAfterEndEvent
+    | BoatLeaveEvent
 export type GameEvents = BABYLON.Observable<GameEventData>
 
 export interface GameStatus {
@@ -43,7 +44,7 @@ export function createGame() {
         },
     }
 
-    let canvas = document.getElementById("root") as HTMLCanvasElement
+    let canvas = document.getElementById("game") as HTMLCanvasElement
     let engine = new BABYLON.Engine(canvas)
     // Resize
     window.addEventListener("resize", function () {
@@ -53,7 +54,7 @@ export function createGame() {
     let scene = new BABYLON.Scene(engine)
     let camera = createCamera({scene, canvas, gameStatus, gameEvents})
     let sceneObjs = createSceneObjs({scene, gameStatus, gameEvents})
-    let gui = createGUI({scene, gameStatus, gameEvents})
+    let gui = createGUI({gameStatus, gameEvents})
 
     let ground = sceneObjs.ground
     let regions = sceneObjs.regions
@@ -67,6 +68,21 @@ export function createGame() {
         for (const human of sceneObjs.humans) {
             regions.leftBank.putHuman(human)
         }
+
+        // 响应开船事件，切换region
+        gameEvents.add((eventData, eventState) => {
+            if (eventData.type === BoatLeaveEventType) {
+                if (gameStatus.humanDrag.targetRegions.has(regions.leftBank)) {
+                    gameStatus.humanDrag.targetRegions.delete(regions.leftBank)
+                    gameStatus.humanDrag.targetRegions.add(regions.rightBank)
+                } else if (gameStatus.humanDrag.targetRegions.has(regions.rightBank)) {
+                    gameStatus.humanDrag.targetRegions.delete(regions.rightBank)
+                    gameStatus.humanDrag.targetRegions.add(regions.leftBank)
+                } else {
+                    throw Error("拖拽时的targetRegions状态错误")
+                }
+            }
+        })
     }
 
     return {
