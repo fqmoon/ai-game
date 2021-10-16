@@ -13,7 +13,14 @@ export type GameEventData =
     | HumanDragMoveEvent
     | HumanDragAfterEndEvent
     | BoatLeaveButtonClickEvent
+    | BoatLeaveEvent
 export type GameEvents = BABYLON.Observable<GameEventData>
+
+export const BoatLeaveEventType = "BoatLeave"
+
+export interface BoatLeaveEvent {
+    type: typeof BoatLeaveEventType
+}
 
 export interface GameStatus {
     humanDrag: {
@@ -85,6 +92,10 @@ export function createGame() {
                 } else {
                     throw Error("拖拽时的targetRegions状态错误")
                 }
+
+                gameEvents.notifyObservers({
+                    type: BoatLeaveEventType,
+                })
             }
         })
     }

@@ -2,7 +2,7 @@ import * as BABYLON from "babylonjs";
 import {PointerOnGroundEventType} from "./ground";
 import {SlotManager, SlotPos} from "./slot";
 import {Region} from "./region";
-import {GameEvents, GameStatus} from "./game";
+import {BoatLeaveEventType, GameEvents, GameStatus} from "./game";
 
 export type HumanIdentity = 'missionary' | 'cannibal'
 
@@ -53,6 +53,12 @@ export function createHuman({scene, position, identity, gameEvents, gameStatus}:
     gameEvents: GameEvents, gameStatus: GameStatus,
 }): Human {
 
+    let activeColor = new BABYLON.Color3(1, 0, 0)
+    let inactiveColor = new BABYLON.Color3(0.5, 0, 0)
+
+    let material = new BABYLON.StandardMaterial("boxMat", scene)
+    material.diffuseColor.copyFrom(activeColor)
+
     function createBox() {
         const box = BABYLON.MeshBuilder.CreateBox("box", {
             width: 1,
@@ -60,9 +66,7 @@ export function createHuman({scene, position, identity, gameEvents, gameStatus}:
             depth: 1,
         });
         box.position = position
-        let boxMat = new BABYLON.StandardMaterial("boxMat", scene)
-        boxMat.diffuseColor = new BABYLON.Color3(1, 0, 0)
-        box.material = boxMat
+        box.material = material
         return box
     }
 
@@ -111,6 +115,21 @@ export function createHuman({scene, position, identity, gameEvents, gameStatus}:
         // 放置成功或失败都重置一下位置
         human.region?.resetHumanPos(human)
     }
+
+    function updateByRegionActive() {
+        if (human.region && gameStatus.humanDrag.targetRegions.has(human.region)) { // 如果当前region激活
+            material.diffuseColor.copyFrom(activeColor)
+        } else { // 否则
+            material.diffuseColor.copyFrom(inactiveColor)
+        }
+    }
+
+    // 在更新targetRegions后更新human表示
+    gameEvents.add(((eventData, eventState) => {
+        if (eventData.type === BoatLeaveEventType) {
+            updateByRegionActive()
+        }
+    }))
 
     // 拖动
     scene.onPointerObservable.add((pointerInfo, eventState) => {
