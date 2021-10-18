@@ -4,6 +4,8 @@ import {Human, HumanDragAfterEndEvent, HumanDragBeforeEndEvent, HumanDragMoveEve
 import {Region} from "./region";
 import {PointerOnGroundEvent} from "./ground";
 import {createCamera} from "./camera";
+import {BoatLeaveButtonClickEvent, BoatLeaveButtonClickEventType, createGUI} from "./gui";
+import {AfterHumanArriveBank, BeforeHumanArriveBank, createRules} from "./rule";
 
 export type GameEventData =
     PointerOnGroundEvent
@@ -11,9 +13,20 @@ export type GameEventData =
     | HumanDragBeforeEndEvent
     | HumanDragMoveEvent
     | HumanDragAfterEndEvent
+    | BoatLeaveButtonClickEvent
+    | BeforeBoatLeaveEvent
+    | BeforeHumanArriveBank
+    | AfterHumanArriveBank
 export type GameEvents = BABYLON.Observable<GameEventData>
 
+export const BeforeBoatLeaveEventType = "BeforeBoatLeave"
+
+export interface BeforeBoatLeaveEvent {
+    type: typeof BeforeBoatLeaveEventType
+}
+
 export interface GameStatus {
+    // human拖拽状态信息
     humanDrag: {
         active: boolean
         // 拖动起始地。在拖动失败后要将human放回它
@@ -26,11 +39,16 @@ export interface GameStatus {
         dragging: false,
         human: undefined,
     })
+
+    boat: Region
+
+    getDstRegion(): Region
 }
 
 export function createGame() {
     // 全局事件处理
     let gameEvents = new BABYLON.Observable() as GameEvents
+    // @ts-ignore
     let gameStatus: GameStatus = {
         // @ts-ignore
         humanDrag: {
@@ -40,9 +58,16 @@ export function createGame() {
             reachedRegion: undefined,
             targetRegions: new Set(),
         },
+        getDstRegion() {
+            for (const region of this.humanDrag.targetRegions) {
+                if (region !== this.boat)
+                    return region
+            }
+            throw Error("find dst region failed")
+        }
     }
 
-    let canvas = document.getElementById("root") as HTMLCanvasElement
+    let canvas = document.getElementById("game") as HTMLCanvasElement
     let engine = new BABYLON.Engine(canvas)
     // Resize
     window.addEventListener("resize", function () {
@@ -52,6 +77,16 @@ export function createGame() {
     let scene = new BABYLON.Scene(engine)
     let camera = createCamera({scene, canvas, gameStatus, gameEvents})
     let sceneObjs = createSceneObjs({scene, gameStatus, gameEvents})
+    let gui = createGUI({
+        gameStatus, gameEvents,
+        boat: sceneObjs.regions.boat,
+        humans: sceneObjs.humans
+    })
+    gameStatus.boat = sceneObjs.regions.boat
+    let rules = createRules({
+        gameStatus, gameEvents, boat: sceneObjs.regions.boat, humans: sceneObjs.humans, scene,
+        gamePassRegion: sceneObjs.regions.rightBank,
+    })
 
     let ground = sceneObjs.ground
     let regions = sceneObjs.regions
@@ -65,6 +100,25 @@ export function createGame() {
         for (const human of sceneObjs.humans) {
             regions.leftBank.putHuman(human)
         }
+
+        // 响应开船事件，切换region
+        gameEvents.add((eventData, eventState) => {
+            if (eventData.type === BoatLeaveButtonClickEventType) {
+                if (gameStatus.humanDrag.targetRegions.has(regions.leftBank)) {
+                    gameStatus.humanDrag.targetRegions.delete(regions.leftBank)
+                    gameStatus.humanDrag.targetRegions.add(regions.rightBank)
+                } else if (gameStatus.humanDrag.targetRegions.has(regions.rightBank)) {
+                    gameStatus.humanDrag.targetRegions.delete(regions.rightBank)
+                    gameStatus.humanDrag.targetRegions.add(regions.leftBank)
+                } else {
+                    throw Error("拖拽时的targetRegions状态错误")
+                }
+
+                gameEvents.notifyObservers({
+                    type: BeforeBoatLeaveEventType,
+                })
+            }
+        })
     }
 
     return {
