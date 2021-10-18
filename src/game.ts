@@ -5,6 +5,7 @@ import {Region} from "./region";
 import {PointerOnGroundEvent} from "./ground";
 import {createCamera} from "./camera";
 import {BoatLeaveButtonClickEvent, BoatLeaveButtonClickEventType, createGUI} from "./gui";
+import {BeforeHumanArriveBank, createRules} from "./rule";
 
 export type GameEventData =
     PointerOnGroundEvent
@@ -13,16 +14,18 @@ export type GameEventData =
     | HumanDragMoveEvent
     | HumanDragAfterEndEvent
     | BoatLeaveButtonClickEvent
-    | BoatLeaveEvent
+    | BeforeBoatLeaveEvent
+    | BeforeHumanArriveBank
 export type GameEvents = BABYLON.Observable<GameEventData>
 
-export const BoatLeaveEventType = "BoatLeave"
+export const BeforeBoatLeaveEventType = "BeforeBoatLeave"
 
-export interface BoatLeaveEvent {
-    type: typeof BoatLeaveEventType
+export interface BeforeBoatLeaveEvent {
+    type: typeof BeforeBoatLeaveEventType
 }
 
 export interface GameStatus {
+    // human拖拽状态信息
     humanDrag: {
         active: boolean
         // 拖动起始地。在拖动失败后要将human放回它
@@ -66,6 +69,9 @@ export function createGame() {
         boat: sceneObjs.regions.boat,
         humans: sceneObjs.humans
     })
+    let rules = createRules({
+        gameStatus, gameEvents, boat: sceneObjs.regions.boat, humans: sceneObjs.humans, scene
+    })
 
     let ground = sceneObjs.ground
     let regions = sceneObjs.regions
@@ -94,7 +100,7 @@ export function createGame() {
                 }
 
                 gameEvents.notifyObservers({
-                    type: BoatLeaveEventType,
+                    type: BeforeBoatLeaveEventType,
                 })
             }
         })

@@ -2,7 +2,7 @@ import * as BABYLON from "babylonjs";
 import {PointerOnGroundEventType} from "./ground";
 import {SlotManager, SlotPos} from "./slot";
 import {Region} from "./region";
-import {BoatLeaveEventType, GameEvents, GameStatus} from "./game";
+import {BeforeBoatLeaveEventType, GameEvents, GameStatus} from "./game";
 
 export type HumanIdentity = 'missionary' | 'cannibal'
 
@@ -126,7 +126,7 @@ export function createHuman({scene, position, identity, gameEvents, gameStatus}:
 
     // 在更新targetRegions后更新human表示
     gameEvents.add(((eventData, eventState) => {
-        if (eventData.type === BoatLeaveEventType) {
+        if (eventData.type === BeforeBoatLeaveEventType) {
             updateByRegionActive()
         }
     }))
