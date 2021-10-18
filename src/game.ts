@@ -5,7 +5,7 @@ import {Region} from "./region";
 import {PointerOnGroundEvent} from "./ground";
 import {createCamera} from "./camera";
 import {BoatLeaveButtonClickEvent, BoatLeaveButtonClickEventType, createGUI} from "./gui";
-import {BeforeHumanArriveBank, createRules} from "./rule";
+import {AfterHumanArriveBank, BeforeHumanArriveBank, createRules} from "./rule";
 
 export type GameEventData =
     PointerOnGroundEvent
@@ -16,6 +16,7 @@ export type GameEventData =
     | BoatLeaveButtonClickEvent
     | BeforeBoatLeaveEvent
     | BeforeHumanArriveBank
+    | AfterHumanArriveBank
 export type GameEvents = BABYLON.Observable<GameEventData>
 
 export const BeforeBoatLeaveEventType = "BeforeBoatLeave"
@@ -38,11 +39,16 @@ export interface GameStatus {
         dragging: false,
         human: undefined,
     })
+
+    boat: Region
+
+    getDstRegion(): Region
 }
 
 export function createGame() {
     // 全局事件处理
     let gameEvents = new BABYLON.Observable() as GameEvents
+    // @ts-ignore
     let gameStatus: GameStatus = {
         // @ts-ignore
         humanDrag: {
@@ -52,6 +58,13 @@ export function createGame() {
             reachedRegion: undefined,
             targetRegions: new Set(),
         },
+        getDstRegion() {
+            for (const region of this.humanDrag.targetRegions) {
+                if (region !== this.boat)
+                    return region
+            }
+            throw Error("find dst region failed")
+        }
     }
 
     let canvas = document.getElementById("game") as HTMLCanvasElement
@@ -69,8 +82,10 @@ export function createGame() {
         boat: sceneObjs.regions.boat,
         humans: sceneObjs.humans
     })
+    gameStatus.boat = sceneObjs.regions.boat
     let rules = createRules({
-        gameStatus, gameEvents, boat: sceneObjs.regions.boat, humans: sceneObjs.humans, scene
+        gameStatus, gameEvents, boat: sceneObjs.regions.boat, humans: sceneObjs.humans, scene,
+        gamePassRegion: sceneObjs.regions.rightBank,
     })
 
     let ground = sceneObjs.ground

@@ -1,31 +1,70 @@
-import {BeforeBoatLeaveEventType, GameEvents, GameStatus} from "./game";
+import {BeforeBoatLeaveEventType, Game, GameEvents, GameStatus} from "./game";
 import {Region} from "./region";
 import {Human} from "./human";
 import * as BABYLON from "babylonjs";
 
 export const BeforeHumanArriveBankType = "BeforeHumanArriveBank"
+export const AfterHumanArriveBankType = "AfterHumanArriveBank"
 
 export interface BeforeHumanArriveBank {
     type: typeof BeforeHumanArriveBankType
 }
 
-// 游戏失败
-function gameOver() {
-
+export interface AfterHumanArriveBank {
+    type: typeof AfterHumanArriveBankType
 }
 
-// 游戏过关
-function gamePass() {
-
+function getMissionaries(humans: Iterable<Human>) {
+    let rt = []
+    for (const human of humans) {
+        if (human.identity === 'missionary')
+            rt.push(human)
+    }
+    return rt
 }
 
-// 游戏继续
-function gameContinue() {
-
+function getCannibals(humans: Iterable<Human>) {
+    let rt = []
+    for (const human of humans) {
+        if (human.identity === 'cannibal')
+            rt.push(human)
+    }
+    return rt
 }
 
-export function createRules({gameStatus, gameEvents, scene, boat, humans}: {
-    gameEvents: GameEvents, gameStatus: GameStatus, scene: BABYLON.Scene, boat: Region, humans: Iterable<Human>
+function checkGameStatus(gameStatus: GameStatus, gamePassRegion: Region, humans: Iterable<Human>) {
+    let toCheckHumans = getRegionHumans(gamePassRegion, humans)
+    let missionaries = getMissionaries(toCheckHumans)
+    let cannibals = getCannibals(toCheckHumans)
+
+    let humanCount = 0
+    for (const human of humans) {
+        humanCount++
+    }
+
+    // TODO
+    if (toCheckHumans.length === humanCount) { // game pass
+        console.log('game pass')
+    } else if (cannibals.length > missionaries.length) { // game over
+        console.log('game over')
+    } else { // game continue
+        console.log('game continue')
+    }
+}
+
+function getRegionHumans(region: Region, humans: Iterable<Human>) {
+    let bankHumans = []
+    for (const human of humans) {
+        if (human.region === region) {
+            bankHumans.push(human)
+        }
+    }
+    return bankHumans
+}
+
+export function createRules({gameStatus, gameEvents, scene, boat, humans, gamePassRegion}: {
+    gameEvents: GameEvents, gameStatus: GameStatus, scene: BABYLON.Scene, boat: Region, humans: Iterable<Human>,
+    gamePassRegion: Region,
 }) {
     let frameSpeed = 60
 
@@ -45,23 +84,15 @@ export function createRules({gameStatus, gameEvents, scene, boat, humans}: {
     function createAnimations() {
         humanAnims.clear()
 
-        let targetRegion: Region | undefined
-        for (const tr of gameStatus.humanDrag.targetRegions) {
-            if (tr !== boat)
-                targetRegion = tr
-        }
-        if (!targetRegion)
-            throw Error("Not found targetRegion")
-
-        for (const human of humans) {
-            if (human.region === boat) {
-                let {srcPos, dstPos} = putHumanToRegionAndGetPositions(human, targetRegion)
-                setHumanAnim(human, srcPos, dstPos)
-            }
-        }
+        let dstRegion = gameStatus.getDstRegion()
+        let bankHumans = getRegionHumans(boat, humans)
+        bankHumans.forEach(human => {
+            let {srcPos, dstPos} = putHumanToRegionAndGetPositions(human, dstRegion)
+            createHumanAnimation(human, srcPos, dstPos)
+        })
     }
 
-    function setHumanAnim(human: Human, srcPos: BABYLON.Vector3, dstPos: BABYLON.Vector3) {
+    function createHumanAnimation(human: Human, srcPos: BABYLON.Vector3, dstPos: BABYLON.Vector3) {
         let anim = new BABYLON.Animation("humanGoBank", "position", frameSpeed,
             BABYLON.Animation.ANIMATIONTYPE_VECTOR3)
 
@@ -92,20 +123,32 @@ export function createRules({gameStatus, gameEvents, scene, boat, humans}: {
         humanAnims.set(human, anim)
     }
 
-    function beginAnimations() {
+    async function beginAnimations() {
+        let promises = []
         for (const [human, anim] of humanAnims.entries()) {
-            scene.beginDirectAnimation(human.mesh, [anim], 0, 600, false)
+            let control = scene.beginDirectAnimation(human.mesh, [anim], 0, 600, false)
+            let promise = new Promise<null>((resolve, reject) => {
+                control.onAnimationEndObservable.add(() => {
+                    resolve(null)
+                })
+            })
+            promises.push(promise)
         }
+        return Promise.all(promises)
     }
 
-    gameEvents.add((eventData, eventState) => {
+    gameEvents.add(async (eventData, eventState) => {
         if (eventData.type === BeforeBoatLeaveEventType) {
             createAnimations()
-            beginAnimations()
             // TODO 这个事件并不是在动画结束后才播放的，需要写成异步才是
             gameEvents.notifyObservers({
                 type: BeforeHumanArriveBankType,
             })
+            await beginAnimations()
+            gameEvents.notifyObservers({
+                type: AfterHumanArriveBankType,
+            })
+            checkGameStatus(gameStatus, gamePassRegion, humans)
         }
     })
 }
