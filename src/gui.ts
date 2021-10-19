@@ -1,9 +1,8 @@
-import * as BABYLON from "babylonjs";
-import {BeforeBoatLeaveEventType, GameEvents, GameStatus} from "./game";
+import {GameEvents, GameStatus} from "./game";
 import * as $ from "jquery"
 import {Human, HumanDragAfterEndEventType} from "./human";
 import {Region} from "./region";
-import {BeforeHumanArriveBankType} from "./rule";
+import {AfterHumanArriveBankType, BeforeHumanArriveBankType} from "./rule";
 
 export const BoatLeaveButtonClickEventType = "BoatLeaveEvent"
 
@@ -20,10 +19,11 @@ function createBoatLeaveButton({gameStatus, gameEvents, boat, humans}: {
             style="position: absolute;bottom: 0;margin: 1em; left: 50%;transform: translateX(-50%)"
         >开船</button>`)[0] as HTMLButtonElement
 
-    // 在拖拽后和human到达岸之前检测boat的human数量，以控制能否开船
+    // 在拖拽后和human到达岸之前与之后检测boat的human数量，以控制能否开船
     gameEvents.add(((eventData, eventState) => {
         if (eventData.type !== HumanDragAfterEndEventType
-            && eventData.type !== BeforeHumanArriveBankType)
+            && eventData.type !== BeforeHumanArriveBankType
+            && eventData.type !== AfterHumanArriveBankType)
             return
 
         let count = 0

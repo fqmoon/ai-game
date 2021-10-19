@@ -14,15 +14,19 @@ export type GameEventData =
     | HumanDragMoveEvent
     | HumanDragAfterEndEvent
     | BoatLeaveButtonClickEvent
-    | BeforeBoatLeaveEvent
+    | BoatLeaveReady
     | BeforeHumanArriveBank
     | AfterHumanArriveBank
 export type GameEvents = BABYLON.Observable<GameEventData>
 
-export const BeforeBoatLeaveEventType = "BeforeBoatLeave"
+export const BoatLeaveReadyType = "BoatLeaveReady"
 
-export interface BeforeBoatLeaveEvent {
-    type: typeof BeforeBoatLeaveEventType
+export interface BoatLeaveReady {
+    type: typeof BoatLeaveReadyType
+    // 始发站
+    src: Region
+    // 终点站
+    dst: Region
 }
 
 export interface GameStatus {
@@ -85,7 +89,8 @@ export function createGame() {
     gameStatus.boat = sceneObjs.regions.boat
     let rules = createRules({
         gameStatus, gameEvents, boat: sceneObjs.regions.boat, humans: sceneObjs.humans, scene,
-        gamePassRegion: sceneObjs.regions.rightBank,
+        leftBank: sceneObjs.regions.leftBank,
+        rightBank: sceneObjs.regions.rightBank,
     })
 
     let ground = sceneObjs.ground
@@ -104,10 +109,15 @@ export function createGame() {
         // 响应开船事件，切换region
         gameEvents.add((eventData, eventState) => {
             if (eventData.type === BoatLeaveButtonClickEventType) {
+                let src, dst
                 if (gameStatus.humanDrag.targetRegions.has(regions.leftBank)) {
+                    src = regions.leftBank
+                    dst = regions.rightBank
                     gameStatus.humanDrag.targetRegions.delete(regions.leftBank)
                     gameStatus.humanDrag.targetRegions.add(regions.rightBank)
                 } else if (gameStatus.humanDrag.targetRegions.has(regions.rightBank)) {
+                    src = regions.rightBank
+                    dst = regions.leftBank
                     gameStatus.humanDrag.targetRegions.delete(regions.rightBank)
                     gameStatus.humanDrag.targetRegions.add(regions.leftBank)
                 } else {
@@ -115,7 +125,9 @@ export function createGame() {
                 }
 
                 gameEvents.notifyObservers({
-                    type: BeforeBoatLeaveEventType,
+                    type: BoatLeaveReadyType,
+                    src,
+                    dst,
                 })
             }
         })
