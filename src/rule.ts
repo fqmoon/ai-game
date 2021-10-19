@@ -5,6 +5,8 @@ import * as BABYLON from "babylonjs";
 
 export const BeforeHumanArriveBankType = "BeforeHumanArriveBank"
 export const AfterHumanArriveBankType = "AfterHumanArriveBank"
+export const GameOverType = "GameOver"
+export const GamePassType = "GamePass"
 
 export interface BeforeHumanArriveBank {
     type: typeof BeforeHumanArriveBankType
@@ -12,6 +14,14 @@ export interface BeforeHumanArriveBank {
 
 export interface AfterHumanArriveBank {
     type: typeof AfterHumanArriveBankType
+}
+
+export interface GameOver {
+    type: typeof GameOverType
+}
+
+export interface GamePass {
+    type: typeof GamePassType
 }
 
 function getMissionaries(humans: Iterable<Human>) {
@@ -32,16 +42,18 @@ function getCannibals(humans: Iterable<Human>) {
     return rt
 }
 
-function checkLeftRegion(region: Region, humans: Iterable<Human>) {
+function checkLeftRegion(region: Region, humans: Iterable<Human>, gameEvents: GameEvents) {
     let toCheckHumans = getRegionHumans(region, humans)
     let missionaries = getMissionaries(toCheckHumans)
     let cannibals = getCannibals(toCheckHumans)
     if (cannibals.length > missionaries.length && missionaries.length > 0) {
-        console.log('game over')
+        gameEvents.notifyObservers({
+            type: GameOverType,
+        })
     }
 }
 
-function checkRightRegion(region: Region, humans: Iterable<Human>) {
+function checkRightRegion(region: Region, humans: Iterable<Human>, gameEvents: GameEvents) {
     let toCheckHumans = getRegionHumans(region, humans)
     let missionaries = getMissionaries(toCheckHumans)
     let cannibals = getCannibals(toCheckHumans)
@@ -52,9 +64,13 @@ function checkRightRegion(region: Region, humans: Iterable<Human>) {
     }
 
     if (cannibals.length > missionaries.length && missionaries.length > 0) {
-        console.log('game over')
+        gameEvents.notifyObservers({
+            type: GameOverType,
+        })
     } else if (toCheckHumans.length === humanCount) {
-        console.log('game pass')
+        gameEvents.notifyObservers({
+            type: GamePassType,
+        })
     }
 }
 
@@ -145,8 +161,8 @@ export function createRules({gameStatus, gameEvents, scene, boat, humans, leftBa
 
     gameEvents.add(async (eventData, eventState) => {
         if (eventData.type === BoatLeaveReadyType) {
-            checkLeftRegion(leftBank, humans)
-            checkRightRegion(rightBank, humans)
+            checkLeftRegion(leftBank, humans, gameEvents)
+            checkRightRegion(rightBank, humans, gameEvents)
 
             createAnimations()
             gameEvents.notifyObservers({
@@ -158,8 +174,8 @@ export function createRules({gameStatus, gameEvents, scene, boat, humans, leftBa
                 type: AfterHumanArriveBankType,
             })
 
-            checkLeftRegion(leftBank, humans)
-            checkRightRegion(rightBank, humans)
+            checkLeftRegion(leftBank, humans, gameEvents)
+            checkRightRegion(rightBank, humans, gameEvents)
         }
     })
 }

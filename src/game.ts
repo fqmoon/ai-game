@@ -5,7 +5,7 @@ import {Region} from "./region";
 import {PointerOnGroundEvent} from "./ground";
 import {createCamera} from "./camera";
 import {BoatLeaveButtonClickEvent, BoatLeaveButtonClickEventType, createGUI} from "./gui";
-import {AfterHumanArriveBank, BeforeHumanArriveBank, createRules} from "./rule";
+import {AfterHumanArriveBank, BeforeHumanArriveBank, createRules, GameOver, GamePass} from "./rule";
 
 export type GameEventData =
     PointerOnGroundEvent
@@ -17,6 +17,8 @@ export type GameEventData =
     | BoatLeaveReady
     | BeforeHumanArriveBank
     | AfterHumanArriveBank
+    | GameOver
+    | GamePass
 export type GameEvents = BABYLON.Observable<GameEventData>
 
 export const BoatLeaveReadyType = "BoatLeaveReady"
