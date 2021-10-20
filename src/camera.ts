@@ -11,12 +11,11 @@ export function createCamera({scene, canvas, game}: {
     camera.attachControl(canvas, true);
 
     // 在拖拽时禁止相机旋转
-    game.msg.add((eventData, eventState) => {
-        if (eventData.type === HumanDragStartEventType) {
+    game.humanDrag.onDraggingHumanChangedObservable.add(human => {
+        if (human)
             camera.detachControl()
-        } else if (eventData.type === HumanDragBeforeEndEventType) {
+        else
             camera.attachControl()
-        }
     })
 
     return camera

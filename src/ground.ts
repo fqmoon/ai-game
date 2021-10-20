@@ -54,11 +54,11 @@ export function createGround({scene, game}: {
         }
     })
     // 在拖拽开始时发送
-    game.msg.add(((eventData, eventState) => {
-        if (eventData.type === HumanDragStartEventType) {
+    game.humanDrag.onDraggingHumanChangedObservable.add(human => {
+        if (human) {
             sendMsg()
         }
-    }))
+    })
 
     return ground
 }
