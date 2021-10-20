@@ -1,8 +1,7 @@
 import {Game} from "./game";
 import * as $ from "jquery"
-import {Human, HumanDragAfterEndEventType} from "./human";
+import {Human} from "./human";
 import {Region} from "./region";
-import {AfterHumanArriveBankType, BeforeHumanArriveBankType} from "./rule";
 
 export const BoatLeaveButtonClickEventType = "BoatLeaveEvent"
 
@@ -19,20 +18,25 @@ function createBoatLeaveButton({game, boat, humans}: {
             style="position: absolute;bottom: 0;margin: 1em; left: 50%;transform: translateX(-50%)"
         >开船</button>`)[0] as HTMLButtonElement
 
-    // 在拖拽后和human到达岸之前与之后检测boat的human数量，以控制能否开船
-    game.msg.add(((eventData, eventState) => {
-        if (eventData.type !== HumanDragAfterEndEventType
-            && eventData.type !== BeforeHumanArriveBankType
-            && eventData.type !== AfterHumanArriveBankType)
-            return
-
+    function setButtonStatus() {
         let count = 0
         for (const human of humans) {
             if (human.region === boat)
                 count++
         }
         button.disabled = count === 0
-    }))
+    }
+
+    game.boat.onAfterHumanCountChangeObservable.add(() => {
+        setButtonStatus()
+    })
+
+    // 在拖拽后和human到达岸之前与之后检测boat的human数量，以控制能否开船
+    game.humanDrag.onAfterDraggingStatusChangeObservable.add(status => {
+        if (status === 'draggingEnd') {
+            setButtonStatus()
+        }
+    })
 
     // 通知开船
     button.onclick = ev => {
@@ -124,7 +128,7 @@ export function createGUI({game, boat, humans}: {
     gui.gameFailedShow = false
     gui.gamePassUiShow = false
 
-    game.onStatusChangedObservable.add(status => {
+    game.onAfterStatusChangeObservable.add(status => {
         if (status === "failed") {
             gui.gameFailedShow = true
             gui.gamePassUiShow = false

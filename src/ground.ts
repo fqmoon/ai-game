@@ -1,6 +1,5 @@
 import * as BABYLON from "babylonjs";
 import {Game} from "./game";
-import {HumanDragStartEventType} from "./human";
 
 export const PointerOnGroundEventType = "PointerOnGroundEvent"
 
@@ -54,8 +53,8 @@ export function createGround({scene, game}: {
         }
     })
     // 在拖拽开始时发送
-    game.humanDrag.onDraggingHumanChangedObservable.add(human => {
-        if (human) {
+    game.humanDrag.onAfterDraggingStatusChangeObservable.add(status => {
+        if (status === 'draggingStart') {
             sendMsg()
         }
     })

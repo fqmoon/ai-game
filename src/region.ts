@@ -2,12 +2,9 @@ import * as BABYLON from "babylonjs"
 import {createSlotManager, SlotManager} from "./slot";
 import {
     Human,
-    HumanDragBeforeEndEventType,
-    HumanDragMoveEventType,
-    HumanDragStartEventType,
     HumanIdentity
 } from "./human";
-import {GameMsg, Game} from "./game";
+import {Game} from "./game";
 
 /**
  * 主导用户交互，包括以颜色提示放置区域
@@ -41,32 +38,35 @@ export function createRegion({scene, position, width, height, game}: {
         }),
     }
 
-    function isPick() {
-        let res = scene.pick(scene.pointerX, scene.pointerY, m => m === mesh)
-        return res?.hit
+    function isRegionActive() {
+        return game.humanDrag.activeRegions.has(region)
     }
 
-    // 在拖拽时更新选中的region信息
-    game.msg.add(((eventData, eventState) => {
-        let dragInfo = game.humanDrag
-        if (!dragInfo.targetRegions.has(region)) {
+    game.humanDrag.onAfterDraggingStatusChangeObservable.add(status => {
+        if (!isRegionActive())
             return
-        }
 
-        if (eventData.type === HumanDragStartEventType || eventData.type === HumanDragMoveEventType) {
-            if (isPick()) {
+        if (status === 'draggingStart') {
+            if (game.humanDrag.reachedRegion === region) {
                 region.setColorByDrag("reach")
             } else {
                 region.setColorByDrag("notReach")
             }
-        } else if (eventData.type === HumanDragBeforeEndEventType) {
-            if (isPick()) {
-                // 更新选中的region
-                dragInfo.reachedRegion = region
-            }
+        } else if (status === 'draggingEnd') {
             region.setColorByDrag("noDrag")
         }
-    }))
+    })
+
+    game.humanDrag.onDraggingPointerMoveObservable.add(eventData => {
+        if (!isRegionActive())
+            return
+
+        if (game.humanDrag.reachedRegion === region) {
+            region.setColorByDrag("reach")
+        } else {
+            region.setColorByDrag("notReach")
+        }
+    })
 
     let region = {
         mesh,
@@ -89,6 +89,7 @@ export function createRegion({scene, position, width, height, game}: {
                 human.slotManager = newSlotManager
                 human.slotPos = res.slotPos
                 human.region = region
+                this.onAfterHumanCountChangeObservable.notifyObservers()
             }
             return !!res
         },
@@ -106,18 +107,13 @@ export function createRegion({scene, position, width, height, game}: {
             human.slotManager = undefined
             human.slotPos = undefined
             human.region = undefined
+            this.onAfterHumanCountChangeObservable.notifyObservers()
         },
         resetHumanPos(human: Human) {
             if (human.region !== region || !human.slotManager || !human.slotPos)
                 return false
 
             human.setPosByPlanePos(human.slotManager.slotPosToPlanePos(human.slotPos))
-        },
-        putHumanByDrag(human: Human) {
-            if (isPick()) {
-                return this.putHuman(human)
-            }
-            return false
         },
         setColorByDrag(status: "reach" | "notReach" | "noDrag") {
             if (status === "noDrag") {
@@ -128,6 +124,7 @@ export function createRegion({scene, position, width, height, game}: {
                 material.diffuseColor.copyFrom(promoteColor)
             }
         },
+        onAfterHumanCountChangeObservable: new BABYLON.Observable<void>(),
     }
     return region
 }
