@@ -68,9 +68,21 @@ export function createRegion({scene, position, width, height, game}: {
         }
     })
 
+    function getHumanCount() {
+        let count = 0
+        for (const key of Object.keys(slotManagers)) {
+            // @ts-ignore
+            count += slotManagers[key].size
+        }
+        return count
+    }
+
     let region = {
         mesh,
         slotManagers,
+        get humanCount() {
+            return getHumanCount()
+        },
         putHuman(human: Human) {
             if (human.region === region)
                 return false
@@ -89,7 +101,7 @@ export function createRegion({scene, position, width, height, game}: {
                 human.slotManager = newSlotManager
                 human.slotPos = res.slotPos
                 human.region = region
-                this.onAfterHumanCountChangeObservable.notifyObservers()
+                this.onAfterHumanCountChangeObservable.notifyObservers(getHumanCount())
             }
             return !!res
         },
@@ -107,7 +119,8 @@ export function createRegion({scene, position, width, height, game}: {
             human.slotManager = undefined
             human.slotPos = undefined
             human.region = undefined
-            this.onAfterHumanCountChangeObservable.notifyObservers()
+
+            this.onAfterHumanCountChangeObservable.notifyObservers(getHumanCount())
         },
         resetHumanPos(human: Human) {
             if (human.region !== region || !human.slotManager || !human.slotPos)
@@ -124,7 +137,7 @@ export function createRegion({scene, position, width, height, game}: {
                 material.diffuseColor.copyFrom(promoteColor)
             }
         },
-        onAfterHumanCountChangeObservable: new BABYLON.Observable<void>(),
+        onAfterHumanCountChangeObservable: new BABYLON.Observable<number>(),
     }
     return region
 }

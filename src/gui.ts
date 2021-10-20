@@ -18,24 +18,12 @@ function createBoatLeaveButton({game, boat, humans}: {
             style="position: absolute;bottom: 0;margin: 1em; left: 50%;transform: translateX(-50%)"
         >开船</button>`)[0] as HTMLButtonElement
 
-    function setButtonStatus() {
-        let count = 0
-        for (const human of humans) {
-            if (human.region === boat)
-                count++
-        }
-        button.disabled = count === 0
+    function setButtonStatus(humanCountOnBoat: number) {
+        button.disabled = humanCountOnBoat === 0
     }
 
-    game.boat.onAfterHumanCountChangeObservable.add(() => {
-        setButtonStatus()
-    })
-
-    // 在拖拽后和human到达岸之前与之后检测boat的human数量，以控制能否开船
-    game.humanDrag.onAfterDraggingStatusChangeObservable.add(status => {
-        if (status === 'draggingEnd') {
-            setButtonStatus()
-        }
+    game.boat.onAfterHumanCountChangeObservable.add(humanCount => {
+        setButtonStatus(humanCount)
     })
 
     // 通知开船
