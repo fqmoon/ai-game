@@ -44,9 +44,7 @@ function createBoatLeaveButton({game, boat, humans}: {
     return button
 }
 
-function createGameFailed({game, boat, humans}: {
-    game: Game, boat: Region, humans: Iterable<Human>,
-}) {
+function createGameFailed() {
     let div = $.parseHTML(`<div class="model-div">
             <div class="background-ui">
                 <div class="button-container">
@@ -102,8 +100,10 @@ export function createGUI({game, boat, humans}: {
     guiDiv.style.backgroundColor = "transparent"
     guiDiv.append(createBoatLeaveButton({game, boat, humans}))
 
-    let gameFailedUi = createGameFailed({game, boat, humans})
+    let gameFailedUi = createGameFailed()
+    let gamePassUi = createGamePass()
     guiDiv.append(gameFailedUi)
+    guiDiv.append(gamePassUi)
 
     let gui = {
         rootDiv: guiDiv,
@@ -112,14 +112,28 @@ export function createGUI({game, boat, humans}: {
                 gameFailedUi.style.display = 'block'
             else
                 gameFailedUi.style.display = 'none'
-        }
+        },
+        set gamePassUiShow(v: boolean) {
+            if (v)
+                gamePassUi.style.display = 'block'
+            else
+                gamePassUi.style.display = 'none'
+        },
     }
 
     gui.gameFailedShow = false
+    gui.gamePassUiShow = false
 
     game.onStatusChangedObservable.add(status => {
         if (status === "failed") {
             gui.gameFailedShow = true
+            gui.gamePassUiShow = false
+        } else if (status === "pass") {
+            gui.gameFailedShow = false
+            gui.gamePassUiShow = true
+        } else {
+            gui.gameFailedShow = false
+            gui.gamePassUiShow = false
         }
     })
 
@@ -127,7 +141,6 @@ export function createGUI({game, boat, humans}: {
     for (const restartButton of restartButtons) {
         restartButton.onclick = ev => {
             game.restart()
-            gui.gameFailedShow = false
         }
     }
 
