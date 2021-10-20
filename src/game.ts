@@ -11,7 +11,7 @@ import {
 } from "./gui";
 import {AfterHumanArriveBank, BeforeHumanArriveBank, createRules} from "./rule";
 
-export type GameEventData =
+export type GameMsgData =
     PointerOnGroundEvent
     | HumanDragStartEvent
     | HumanDragBeforeEndEvent
@@ -21,7 +21,7 @@ export type GameEventData =
     | BoatLeaveReady
     | BeforeHumanArriveBank
     | AfterHumanArriveBank
-export type GameMsg = BABYLON.Observable<GameEventData>
+export type GameMsg = BABYLON.Observable<GameMsgData>
 
 export const BoatLeaveReadyType = "BoatLeaveReady"
 
@@ -31,6 +31,7 @@ export interface BoatLeaveReady {
 
 export type GameStatus = "continue" | "failed" | "pass"
 
+// human拖拽状态信息
 export type HumanDrag = {
     active: boolean
     readonly dragging: boolean
@@ -42,19 +43,15 @@ export type HumanDrag = {
 }
 
 export interface Game {
-    // human拖拽状态信息
     humanDrag: HumanDrag
-
     boat: Region
-
-    getDstRegion(): Region
-
     // 分别对应游戏继续、失败、过关
     status: GameStatus
-
-    msg: BABYLON.Observable<GameEventData>
+    msg: BABYLON.Observable<GameMsgData>
     onNextRegionChangedObservable: BABYLON.Observable<void>
     onStatusChangedObservable: BABYLON.Observable<GameStatus>
+
+    getDstRegion(): Region
 
     changeNextRegion(): void
 

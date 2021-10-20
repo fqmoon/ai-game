@@ -1,4 +1,4 @@
-import {GameMsg, Game} from "./game";
+import {Game} from "./game";
 import * as $ from "jquery"
 import {Human, HumanDragAfterEndEventType} from "./human";
 import {Region} from "./region";

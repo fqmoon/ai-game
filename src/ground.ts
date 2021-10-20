@@ -1,5 +1,5 @@
 import * as BABYLON from "babylonjs";
-import {GameMsg, Game} from "./game";
+import {Game} from "./game";
 import {HumanDragStartEventType} from "./human";
 
 export const PointerOnGroundEventType = "PointerOnGroundEvent"
