@@ -30,6 +30,8 @@ export interface BoatLeaveReady {
     type: typeof BoatLeaveReadyType
 }
 
+export type GameStatus = "continue" | "failed" | "pass"
+
 export interface Game {
     // human拖拽状态信息
     humanDrag: {
@@ -50,11 +52,11 @@ export interface Game {
     getDstRegion(): Region
 
     // 分别对应游戏继续、失败、过关
-    status: "continue" | "failed" | "pass"
+    status: GameStatus
 
     msg: BABYLON.Observable<GameEventData>
     onNextRegionChangedObservable: BABYLON.Observable<void>
-    onStatusChangedObservable: BABYLON.Observable<void>
+    onStatusChangedObservable: BABYLON.Observable<GameStatus>
 
     changeNextRegion(): void
 
@@ -65,7 +67,7 @@ export function createGame() {
     // 全局事件处理
     let msg = new BABYLON.Observable() as GameMsg
 
-    let _status = "continue"
+    let _status = "continue" as GameStatus
     // @ts-ignore
     let game: Game = {
         msg,
@@ -84,15 +86,13 @@ export function createGame() {
             }
             throw Error("find dst region failed")
         },
-        // @ts-ignore
         get status() {
             return _status
         },
-        // @ts-ignore
         set status(v) {
             if (_status !== v) {
                 _status = v
-                this.onStatusChangedObservable.notifyObservers()
+                this.onStatusChangedObservable.notifyObservers(_status)
             }
         },
         onNextRegionChangedObservable: new BABYLON.Observable(),

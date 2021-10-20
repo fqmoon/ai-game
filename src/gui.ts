@@ -117,11 +117,11 @@ export function createGUI({game, boat, humans}: {
 
     gui.gameFailedShow = false
 
-    game.onStatusChangedObservable.add(((eventData, eventState) => {
-        if (game.status === "failed") {
+    game.onStatusChangedObservable.add(status => {
+        if (status === "failed") {
             gui.gameFailedShow = true
         }
-    }))
+    })
 
     let restartButtons = $(".restart-button")
     for (const restartButton of restartButtons) {
