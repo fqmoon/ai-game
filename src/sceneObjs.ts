@@ -3,6 +3,7 @@ import {createHuman, Human} from "./human";
 import {createGround} from "./ground";
 import {createRegion, Region} from "./region";
 import {GameEvents, GameStatus} from "./game";
+import {RestartEventType} from "./gui";
 
 export function createSceneObjs({scene, gameStatus, gameEvents}: {
     scene: BABYLON.Scene,
@@ -86,6 +87,13 @@ export function createSceneObjs({scene, gameStatus, gameEvents}: {
             gameEvents,
         }),
     }
+
+    // 游戏重开
+    gameEvents.add(((eventData, eventState) => {
+        if (eventData.type === RestartEventType) {
+            gameStatus.restart()
+        }
+    }))
 
     return {
         shadowGenerator,

@@ -4,8 +4,13 @@ import {Human, HumanDragAfterEndEvent, HumanDragBeforeEndEvent, HumanDragMoveEve
 import {Region} from "./region";
 import {PointerOnGroundEvent} from "./ground";
 import {createCamera} from "./camera";
-import {BoatLeaveButtonClickEvent, BoatLeaveButtonClickEventType, createGUI} from "./gui";
-import {AfterHumanArriveBank, BeforeHumanArriveBank, createRules} from "./rule";
+import {
+    BoatLeaveButtonClickEvent,
+    BoatLeaveButtonClickEventType,
+    createGUI,
+    RestartEvent,
+} from "./gui";
+import {AfterHumanArriveBank, BeforeHumanArriveBank, createRules, GameOver, GamePass} from "./rule";
 
 export type GameEventData =
     PointerOnGroundEvent
@@ -14,15 +19,18 @@ export type GameEventData =
     | HumanDragMoveEvent
     | HumanDragAfterEndEvent
     | BoatLeaveButtonClickEvent
-    | BeforeBoatLeaveEvent
+    | BoatLeaveReady
     | BeforeHumanArriveBank
     | AfterHumanArriveBank
+    | GameOver
+    | GamePass
+    | RestartEvent
 export type GameEvents = BABYLON.Observable<GameEventData>
 
-export const BeforeBoatLeaveEventType = "BeforeBoatLeave"
+export const BoatLeaveReadyType = "BoatLeaveReady"
 
-export interface BeforeBoatLeaveEvent {
-    type: typeof BeforeBoatLeaveEventType
+export interface BoatLeaveReady {
+    type: typeof BoatLeaveReadyType
 }
 
 export interface GameStatus {
@@ -43,11 +51,23 @@ export interface GameStatus {
     boat: Region
 
     getDstRegion(): Region
+
+    // 分别对应游戏继续、失败、过关
+    status: "continue" | "over" | "pass"
+
+    onNextRegionChangedObservable: BABYLON.Observable<void>
+    onStatusChangedObservable: BABYLON.Observable<void>
+
+    changeNextRegion(): void
+
+    restart(): void
 }
 
 export function createGame() {
     // 全局事件处理
     let gameEvents = new BABYLON.Observable() as GameEvents
+
+    let _status = "continue"
     // @ts-ignore
     let gameStatus: GameStatus = {
         // @ts-ignore
@@ -64,7 +84,49 @@ export function createGame() {
                     return region
             }
             throw Error("find dst region failed")
-        }
+        },
+        // @ts-ignore
+        get status() {
+            return _status
+        },
+        // @ts-ignore
+        set status(v) {
+            if (_status !== v) {
+                _status = v
+                this.onStatusChangedObservable.notifyObservers()
+            }
+        },
+        onNextRegionChangedObservable: new BABYLON.Observable(),
+        onStatusChangedObservable: new BABYLON.Observable(),
+        changeNextRegion() {
+            let lastRegion, nextRegion
+            if (gameStatus.humanDrag.targetRegions.has(regions.leftBank)) {
+                lastRegion = regions.leftBank
+                nextRegion = regions.rightBank
+                gameStatus.humanDrag.targetRegions.delete(regions.leftBank)
+                gameStatus.humanDrag.targetRegions.add(regions.rightBank)
+            } else if (gameStatus.humanDrag.targetRegions.has(regions.rightBank)) {
+                lastRegion = regions.rightBank
+                nextRegion = regions.leftBank
+                gameStatus.humanDrag.targetRegions.delete(regions.rightBank)
+                gameStatus.humanDrag.targetRegions.add(regions.leftBank)
+            } else {
+                throw Error("change region failed")
+            }
+
+            this.onNextRegionChangedObservable.notifyObservers()
+        },
+        restart() {
+            for (const human of sceneObjs.humans) {
+                regions.leftBank.putHuman(human)
+            }
+            let dragInfo = gameStatus.humanDrag
+            dragInfo.targetRegions.clear()
+            dragInfo.targetRegions.add(regions.leftBank)
+            dragInfo.targetRegions.add(regions.boat)
+            gameStatus.onNextRegionChangedObservable.notifyObservers()
+            gameStatus.status = "continue"
+        },
     }
 
     let canvas = document.getElementById("game") as HTMLCanvasElement
@@ -85,7 +147,8 @@ export function createGame() {
     gameStatus.boat = sceneObjs.regions.boat
     let rules = createRules({
         gameStatus, gameEvents, boat: sceneObjs.regions.boat, humans: sceneObjs.humans, scene,
-        gamePassRegion: sceneObjs.regions.rightBank,
+        leftBank: sceneObjs.regions.leftBank,
+        rightBank: sceneObjs.regions.rightBank,
     })
 
     let ground = sceneObjs.ground
@@ -93,29 +156,14 @@ export function createGame() {
 
     // 初始化
     {
-        gameStatus.humanDrag.targetRegions.add(regions.leftBank)
-        gameStatus.humanDrag.targetRegions.add(regions.boat)
-
-        // 初始化：将human放入region
-        for (const human of sceneObjs.humans) {
-            regions.leftBank.putHuman(human)
-        }
+        gameStatus.restart()
 
         // 响应开船事件，切换region
         gameEvents.add((eventData, eventState) => {
             if (eventData.type === BoatLeaveButtonClickEventType) {
-                if (gameStatus.humanDrag.targetRegions.has(regions.leftBank)) {
-                    gameStatus.humanDrag.targetRegions.delete(regions.leftBank)
-                    gameStatus.humanDrag.targetRegions.add(regions.rightBank)
-                } else if (gameStatus.humanDrag.targetRegions.has(regions.rightBank)) {
-                    gameStatus.humanDrag.targetRegions.delete(regions.rightBank)
-                    gameStatus.humanDrag.targetRegions.add(regions.leftBank)
-                } else {
-                    throw Error("拖拽时的targetRegions状态错误")
-                }
-
+                gameStatus.changeNextRegion()
                 gameEvents.notifyObservers({
-                    type: BeforeBoatLeaveEventType,
+                    type: BoatLeaveReadyType,
                 })
             }
         })

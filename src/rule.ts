@@ -1,10 +1,12 @@
-import {BeforeBoatLeaveEventType, Game, GameEvents, GameStatus} from "./game";
+import {BoatLeaveReadyType, Game, GameEvents, GameStatus} from "./game";
 import {Region} from "./region";
 import {Human} from "./human";
 import * as BABYLON from "babylonjs";
 
 export const BeforeHumanArriveBankType = "BeforeHumanArriveBank"
 export const AfterHumanArriveBankType = "AfterHumanArriveBank"
+export const GameOverType = "GameOver"
+export const GamePassType = "GamePass"
 
 export interface BeforeHumanArriveBank {
     type: typeof BeforeHumanArriveBankType
@@ -12,6 +14,14 @@ export interface BeforeHumanArriveBank {
 
 export interface AfterHumanArriveBank {
     type: typeof AfterHumanArriveBankType
+}
+
+export interface GameOver {
+    type: typeof GameOverType
+}
+
+export interface GamePass {
+    type: typeof GamePassType
 }
 
 function getMissionaries(humans: Iterable<Human>) {
@@ -32,8 +42,20 @@ function getCannibals(humans: Iterable<Human>) {
     return rt
 }
 
-function checkGameStatus(gameStatus: GameStatus, gamePassRegion: Region, humans: Iterable<Human>) {
-    let toCheckHumans = getRegionHumans(gamePassRegion, humans)
+function checkLeftRegion(region: Region, humans: Iterable<Human>, gameEvents: GameEvents, gameStatus: GameStatus) {
+    let toCheckHumans = getRegionHumans(region, humans)
+    let missionaries = getMissionaries(toCheckHumans)
+    let cannibals = getCannibals(toCheckHumans)
+    if (cannibals.length > missionaries.length && missionaries.length > 0) {
+        gameStatus.status = "over"
+        gameEvents.notifyObservers({
+            type: GameOverType,
+        })
+    }
+}
+
+function checkRightRegion(region: Region, humans: Iterable<Human>, gameEvents: GameEvents, gameStatus: GameStatus) {
+    let toCheckHumans = getRegionHumans(region, humans)
     let missionaries = getMissionaries(toCheckHumans)
     let cannibals = getCannibals(toCheckHumans)
 
@@ -42,13 +64,16 @@ function checkGameStatus(gameStatus: GameStatus, gamePassRegion: Region, humans:
         humanCount++
     }
 
-    // TODO
-    if (toCheckHumans.length === humanCount) { // game pass
-        console.log('game pass')
-    } else if (cannibals.length > missionaries.length) { // game over
-        console.log('game over')
-    } else { // game continue
-        console.log('game continue')
+    if (cannibals.length > missionaries.length && missionaries.length > 0) {
+        gameStatus.status = "over"
+        gameEvents.notifyObservers({
+            type: GameOverType,
+        })
+    } else if (toCheckHumans.length === humanCount) {
+        gameStatus.status = "pass"
+        gameEvents.notifyObservers({
+            type: GamePassType,
+        })
     }
 }
 
@@ -62,9 +87,9 @@ function getRegionHumans(region: Region, humans: Iterable<Human>) {
     return bankHumans
 }
 
-export function createRules({gameStatus, gameEvents, scene, boat, humans, gamePassRegion}: {
+export function createRules({gameStatus, gameEvents, scene, boat, humans, leftBank, rightBank}: {
     gameEvents: GameEvents, gameStatus: GameStatus, scene: BABYLON.Scene, boat: Region, humans: Iterable<Human>,
-    gamePassRegion: Region,
+    leftBank: Region, rightBank: Region,
 }) {
     let frameSpeed = 60
 
@@ -138,17 +163,24 @@ export function createRules({gameStatus, gameEvents, scene, boat, humans, gamePa
     }
 
     gameEvents.add(async (eventData, eventState) => {
-        if (eventData.type === BeforeBoatLeaveEventType) {
-            createAnimations()
-            // TODO 这个事件并不是在动画结束后才播放的，需要写成异步才是
-            gameEvents.notifyObservers({
-                type: BeforeHumanArriveBankType,
-            })
-            await beginAnimations()
-            gameEvents.notifyObservers({
-                type: AfterHumanArriveBankType,
-            })
-            checkGameStatus(gameStatus, gamePassRegion, humans)
+        if (eventData.type === BoatLeaveReadyType) {
+            checkLeftRegion(leftBank, humans, gameEvents, gameStatus)
+            checkRightRegion(rightBank, humans, gameEvents, gameStatus)
+
+            if (gameStatus.status === "continue") {
+                createAnimations()
+                gameEvents.notifyObservers({
+                    type: BeforeHumanArriveBankType,
+                })
+                await beginAnimations()
+
+                gameEvents.notifyObservers({
+                    type: AfterHumanArriveBankType,
+                })
+
+                checkLeftRegion(leftBank, humans, gameEvents,gameStatus)
+                checkRightRegion(rightBank, humans, gameEvents,gameStatus)
+            }
         }
     })
 }
