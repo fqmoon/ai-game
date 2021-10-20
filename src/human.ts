@@ -143,7 +143,6 @@ export function createHuman({scene, position, identity, game}: {
                 let pickedMesh = pointerInfo.pickInfo.pickedMesh
                 if (pickedMesh === mesh) {
                     dragInfo.human = human
-                    dragInfo.dragging = true
                     dragInfo.reachedRegion = undefined
 
                     game.msg.notifyObservers({
@@ -159,9 +158,6 @@ export function createHuman({scene, position, identity, game}: {
 
                 putIntoRegion()
 
-                // @ts-ignore
-                dragInfo.dragging = false
-                // @ts-ignore
                 dragInfo.human = undefined
                 dragInfo.reachedRegion = undefined
 

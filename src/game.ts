@@ -33,17 +33,13 @@ export type GameStatus = "continue" | "failed" | "pass"
 
 export type HumanDrag = {
     active: boolean
+    readonly dragging: boolean
     // 拖动起始地。在拖动失败后要将human放回它
     targetRegions: Set<Region>,
     reachedRegion?: Region,
-    onDraggingChangedObservable: BABYLON.Observable<boolean>
-} & ({
-    dragging: true,
-    human: Human,
-} | {
-    dragging: false,
-    human: undefined,
-})
+    onDraggingHumanChangedObservable: BABYLON.Observable<Human | undefined>
+    human?: Human,
+}
 
 export interface Game {
     // human拖拽状态信息
@@ -70,25 +66,25 @@ export function createGame() {
     let msg = new BABYLON.Observable() as GameMsg
 
     function createHumanDrag(): HumanDrag {
-        let _dragging = false
-        let rt = {
+        let _human: Human | undefined
+        return {
             active: true,
             get dragging() {
-                return _dragging
+                return !!this.human
             },
-            set dragging(v) {
-                if (_dragging !== v) {
-                    _dragging = v
-                    this.onDraggingChangedObservable.notifyObservers(_dragging)
+            get human() {
+                return _human
+            },
+            set human(v) {
+                if (v !== _human) {
+                    _human = v
+                    this.onDraggingHumanChangedObservable.notifyObservers(_human)
                 }
             },
-            human: undefined,
             reachedRegion: undefined,
             targetRegions: new Set(),
-            onDraggingChangedObservable: new BABYLON.Observable(),
+            onDraggingHumanChangedObservable: new BABYLON.Observable(),
         }
-        // @ts-ignore
-        return rt
     }
 
     let _status = "continue" as GameStatus
