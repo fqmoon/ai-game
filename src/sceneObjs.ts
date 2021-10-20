@@ -91,13 +91,7 @@ export function createSceneObjs({scene, gameStatus, gameEvents}: {
     // 游戏重开
     gameEvents.add(((eventData, eventState) => {
         if (eventData.type === RestartEventType) {
-            for (const human of humans) {
-                regions.leftBank.putHuman(human)
-            }
-            let dragInfo = gameStatus.humanDrag
-            dragInfo.targetRegions.clear()
-            dragInfo.targetRegions.add(regions.leftBank)
-            dragInfo.targetRegions.add(regions.boat)
+            gameStatus.restart()
         }
     }))
 

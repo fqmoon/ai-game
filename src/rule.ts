@@ -178,8 +178,8 @@ export function createRules({gameStatus, gameEvents, scene, boat, humans, leftBa
                     type: AfterHumanArriveBankType,
                 })
 
-                checkLeftRegion(leftBank, humans, gameEvents, gameStatus)
-                checkRightRegion(rightBank, humans, gameEvents, gameStatus)
+                checkLeftRegion(leftBank, humans, gameEvents,gameStatus)
+                checkRightRegion(rightBank, humans, gameEvents,gameStatus)
             }
         }
     })
