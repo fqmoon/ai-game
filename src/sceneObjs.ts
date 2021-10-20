@@ -2,12 +2,11 @@ import * as BABYLON from "babylonjs";
 import {createHuman, Human} from "./human";
 import {createGround} from "./ground";
 import {createRegion, Region} from "./region";
-import {GameEvents, Game} from "./game";
+import {GameMsg, Game} from "./game";
 import {RestartEventType} from "./gui";
 
-export function createSceneObjs({scene, game, gameEvents}: {
-    scene: BABYLON.Scene,
-    gameEvents: GameEvents, game: Game,
+export function createSceneObjs({scene, game}: {
+    scene: BABYLON.Scene, game: Game,
 }) {
     function createSkyLight() {
         const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
@@ -33,7 +32,7 @@ export function createSceneObjs({scene, game, gameEvents}: {
     }
 
     let skyLight = createSkyLight()
-    let ground = createGround({scene, game: game, gameEvents,})
+    let ground = createGround({scene, game: game,})
 
     let humans = new Set<Human>()
     for (let i = 0; i < 3; i++) {
@@ -41,7 +40,6 @@ export function createSceneObjs({scene, game, gameEvents}: {
             scene, identity: 'missionary',
             position: new BABYLON.Vector3(0, 0.5, 0),
             game: game,
-            gameEvents,
         }))
     }
     for (let i = 0; i < 3; i++) {
@@ -49,7 +47,6 @@ export function createSceneObjs({scene, game, gameEvents}: {
             scene, identity: 'cannibal',
             position: new BABYLON.Vector3(0, 0.5, 0),
             game: game,
-            gameEvents,
         }))
     }
 
@@ -68,7 +65,6 @@ export function createSceneObjs({scene, game, gameEvents}: {
             width: 20,
             height: 40,
             game: game,
-            gameEvents,
         }),
         rightBank: createRegion({
             scene,
@@ -76,7 +72,6 @@ export function createSceneObjs({scene, game, gameEvents}: {
             width: 20,
             height: 40,
             game: game,
-            gameEvents,
         }),
         boat: createRegion({
             scene,
@@ -84,12 +79,11 @@ export function createSceneObjs({scene, game, gameEvents}: {
             width: 20,
             height: 40,
             game: game,
-            gameEvents,
         }),
     }
 
     // 游戏重开
-    gameEvents.add(((eventData, eventState) => {
+    game.msg.add(((eventData, eventState) => {
         if (eventData.type === RestartEventType) {
             game.restart()
         }

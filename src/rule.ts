@@ -1,4 +1,4 @@
-import {BoatLeaveReadyType, Game, GameEvents} from "./game";
+import {BoatLeaveReadyType, Game, GameMsg} from "./game";
 import {Region} from "./region";
 import {Human} from "./human";
 import * as BABYLON from "babylonjs";
@@ -42,19 +42,19 @@ function getCannibals(humans: Iterable<Human>) {
     return rt
 }
 
-function checkLeftRegion(region: Region, humans: Iterable<Human>, gameEvents: GameEvents, game: Game) {
+function checkLeftRegion(region: Region, humans: Iterable<Human>, game: Game) {
     let toCheckHumans = getRegionHumans(region, humans)
     let missionaries = getMissionaries(toCheckHumans)
     let cannibals = getCannibals(toCheckHumans)
     if (cannibals.length > missionaries.length && missionaries.length > 0) {
         game.status = "over"
-        gameEvents.notifyObservers({
+        game.msg.notifyObservers({
             type: GameOverType,
         })
     }
 }
 
-function checkRightRegion(region: Region, humans: Iterable<Human>, gameEvents: GameEvents, game: Game) {
+function checkRightRegion(region: Region, humans: Iterable<Human>, game: Game) {
     let toCheckHumans = getRegionHumans(region, humans)
     let missionaries = getMissionaries(toCheckHumans)
     let cannibals = getCannibals(toCheckHumans)
@@ -66,12 +66,12 @@ function checkRightRegion(region: Region, humans: Iterable<Human>, gameEvents: G
 
     if (cannibals.length > missionaries.length && missionaries.length > 0) {
         game.status = "over"
-        gameEvents.notifyObservers({
+        game.msg.notifyObservers({
             type: GameOverType,
         })
     } else if (toCheckHumans.length === humanCount) {
         game.status = "pass"
-        gameEvents.notifyObservers({
+        game.msg.notifyObservers({
             type: GamePassType,
         })
     }
@@ -87,8 +87,8 @@ function getRegionHumans(region: Region, humans: Iterable<Human>) {
     return bankHumans
 }
 
-export function createRules({gameEvents, game, scene, boat, humans, leftBank, rightBank}: {
-    gameEvents: GameEvents, game: Game, scene: BABYLON.Scene, boat: Region, humans: Iterable<Human>,
+export function createRules({game, scene, boat, humans, leftBank, rightBank}: {
+    game: Game, scene: BABYLON.Scene, boat: Region, humans: Iterable<Human>,
     leftBank: Region, rightBank: Region,
 }) {
     let frameSpeed = 60
@@ -162,24 +162,24 @@ export function createRules({gameEvents, game, scene, boat, humans, leftBank, ri
         return Promise.all(promises)
     }
 
-    gameEvents.add(async (eventData, eventState) => {
+    game.msg.add(async (eventData, eventState) => {
         if (eventData.type === BoatLeaveReadyType) {
-            checkLeftRegion(leftBank, humans, gameEvents, game)
-            checkRightRegion(rightBank, humans, gameEvents, game)
+            checkLeftRegion(leftBank, humans, game)
+            checkRightRegion(rightBank, humans, game)
 
             if (game.status === "continue") {
                 createAnimations()
-                gameEvents.notifyObservers({
+                game.msg.notifyObservers({
                     type: BeforeHumanArriveBankType,
                 })
                 await beginAnimations()
 
-                gameEvents.notifyObservers({
+                game.msg.notifyObservers({
                     type: AfterHumanArriveBankType,
                 })
 
-                checkLeftRegion(leftBank, humans, gameEvents, game)
-                checkRightRegion(rightBank, humans, gameEvents, game)
+                checkLeftRegion(leftBank, humans, game)
+                checkRightRegion(rightBank, humans, game)
             }
         }
     })

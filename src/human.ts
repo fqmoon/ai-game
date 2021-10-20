@@ -2,7 +2,7 @@ import * as BABYLON from "babylonjs";
 import {PointerOnGroundEventType} from "./ground";
 import {SlotManager, SlotPos} from "./slot";
 import {Region} from "./region";
-import {BoatLeaveReadyType, GameEvents, Game} from "./game";
+import {BoatLeaveReadyType, GameMsg, Game} from "./game";
 import {RestartEventType} from "./gui";
 
 export type HumanIdentity = 'missionary' | 'cannibal'
@@ -49,9 +49,8 @@ export interface HumanDragMoveEvent {
     type: typeof HumanDragMoveEventType
 }
 
-export function createHuman({scene, position, identity, gameEvents, game}: {
-    scene: BABYLON.Scene, position: BABYLON.Vector3, identity: HumanIdentity,
-    gameEvents: GameEvents, game: Game,
+export function createHuman({scene, position, identity, game}: {
+    scene: BABYLON.Scene, position: BABYLON.Vector3, identity: HumanIdentity, game: Game,
 }): Human {
 
     let activeColor = new BABYLON.Color3(1, 0, 0)
@@ -98,7 +97,7 @@ export function createHuman({scene, position, identity, gameEvents, game}: {
     }
 
     // 拖动时根据地形位置更新human位置
-    gameEvents.add((eventData, eventState) => {
+    game.msg.add((eventData, eventState) => {
         if (eventData.type === PointerOnGroundEventType
             && game.humanDrag.active
             && game.humanDrag.dragging
@@ -148,14 +147,14 @@ export function createHuman({scene, position, identity, gameEvents, game}: {
                     dragInfo.dragging = true
                     dragInfo.reachedRegion = undefined
 
-                    gameEvents.notifyObservers({
+                    game.msg.notifyObservers({
                         type: HumanDragStartEventType,
                     })
                 }
             }
         } else if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERUP) {
             if (dragInfo.human === human) {
-                gameEvents.notifyObservers({
+                game.msg.notifyObservers({
                     type: HumanDragBeforeEndEventType,
                 })
 
@@ -167,13 +166,13 @@ export function createHuman({scene, position, identity, gameEvents, game}: {
                     reachedRegion: undefined,
                 })
 
-                gameEvents.notifyObservers({
+                game.msg.notifyObservers({
                     type: HumanDragAfterEndEventType,
                 })
             }
         } else if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERMOVE) {
             if (dragInfo.human === human) {
-                gameEvents.notifyObservers({
+                game.msg.notifyObservers({
                     type: HumanDragMoveEventType,
                 })
             }

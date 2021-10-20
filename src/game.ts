@@ -25,7 +25,7 @@ export type GameEventData =
     | GameOver
     | GamePass
     | RestartEvent
-export type GameEvents = BABYLON.Observable<GameEventData>
+export type GameMsg = BABYLON.Observable<GameEventData>
 
 export const BoatLeaveReadyType = "BoatLeaveReady"
 
@@ -55,6 +55,7 @@ export interface Game {
     // 分别对应游戏继续、失败、过关
     status: "continue" | "over" | "pass"
 
+    msg: BABYLON.Observable<GameEventData>
     onNextRegionChangedObservable: BABYLON.Observable<void>
     onStatusChangedObservable: BABYLON.Observable<void>
 
@@ -65,11 +66,12 @@ export interface Game {
 
 export function createGame() {
     // 全局事件处理
-    let gameEvents = new BABYLON.Observable() as GameEvents
+    let msg = new BABYLON.Observable() as GameMsg
 
     let _status = "continue"
     // @ts-ignore
     let game: Game = {
+        msg,
         // @ts-ignore
         humanDrag: {
             active: true,
@@ -137,16 +139,16 @@ export function createGame() {
     });
 
     let scene = new BABYLON.Scene(engine)
-    let camera = createCamera({scene, canvas, game: game, gameEvents})
-    let sceneObjs = createSceneObjs({scene, game: game, gameEvents})
+    let camera = createCamera({scene, canvas, game: game,})
+    let sceneObjs = createSceneObjs({scene, game: game,})
     let gui = createGUI({
-        game: game, gameEvents,
+        game: game,
         boat: sceneObjs.regions.boat,
         humans: sceneObjs.humans
     })
     game.boat = sceneObjs.regions.boat
     let rules = createRules({
-        game: game, gameEvents: gameEvents, boat: sceneObjs.regions.boat, humans: sceneObjs.humans, scene,
+        game: game, boat: sceneObjs.regions.boat, humans: sceneObjs.humans, scene,
         leftBank: sceneObjs.regions.leftBank,
         rightBank: sceneObjs.regions.rightBank,
     })
@@ -159,10 +161,10 @@ export function createGame() {
         game.restart()
 
         // 响应开船事件，切换region
-        gameEvents.add((eventData, eventState) => {
+        msg.add((eventData, eventState) => {
             if (eventData.type === BoatLeaveButtonClickEventType) {
                 game.changeNextRegion()
-                gameEvents.notifyObservers({
+                msg.notifyObservers({
                     type: BoatLeaveReadyType,
                 })
             }

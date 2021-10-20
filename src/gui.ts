@@ -1,4 +1,4 @@
-import {GameEvents, Game} from "./game";
+import {GameMsg, Game} from "./game";
 import * as $ from "jquery"
 import {Human, HumanDragAfterEndEventType} from "./human";
 import {Region} from "./region";
@@ -16,8 +16,8 @@ export interface RestartEvent {
 }
 
 // 开船按钮
-function createBoatLeaveButton({game, gameEvents, boat, humans}: {
-    gameEvents: GameEvents, game: Game, boat: Region, humans: Iterable<Human>,
+function createBoatLeaveButton({game, boat, humans}: {
+    game: Game, boat: Region, humans: Iterable<Human>,
 }) {
     let button = $.parseHTML(`<button 
             disabled
@@ -25,7 +25,7 @@ function createBoatLeaveButton({game, gameEvents, boat, humans}: {
         >开船</button>`)[0] as HTMLButtonElement
 
     // 在拖拽后和human到达岸之前与之后检测boat的human数量，以控制能否开船
-    gameEvents.add(((eventData, eventState) => {
+    game.msg.add(((eventData, eventState) => {
         if (eventData.type !== HumanDragAfterEndEventType
             && eventData.type !== BeforeHumanArriveBankType
             && eventData.type !== AfterHumanArriveBankType)
@@ -41,7 +41,7 @@ function createBoatLeaveButton({game, gameEvents, boat, humans}: {
 
     // 通知开船
     button.onclick = ev => {
-        gameEvents.notifyObservers({
+        game.msg.notifyObservers({
             type: BoatLeaveButtonClickEventType,
         })
     }
@@ -49,8 +49,8 @@ function createBoatLeaveButton({game, gameEvents, boat, humans}: {
     return button
 }
 
-function createGameOver({game, gameEvents, boat, humans}: {
-    gameEvents: GameEvents, game: Game, boat: Region, humans: Iterable<Human>,
+function createGameOver({game, boat, humans}: {
+    game: Game, boat: Region, humans: Iterable<Human>,
 }) {
     let div = $.parseHTML(`<div class="model-div">
             <div class="background-ui">
@@ -98,16 +98,16 @@ function injectCss() {
     </style>`)
 }
 
-export function createGUI({game, gameEvents, boat, humans}: {
-    gameEvents: GameEvents, game: Game, boat: Region, humans: Iterable<Human>,
+export function createGUI({game, boat, humans}: {
+    game: Game, boat: Region, humans: Iterable<Human>,
 }) {
     injectCss()
 
     let guiDiv = $("#gui")[0]
     guiDiv.style.backgroundColor = "transparent"
-    guiDiv.append(createBoatLeaveButton({game, gameEvents, boat, humans}))
+    guiDiv.append(createBoatLeaveButton({game, boat, humans}))
 
-    let gameOverUi = createGameOver({game, gameEvents, boat, humans})
+    let gameOverUi = createGameOver({game, boat, humans})
     guiDiv.append(gameOverUi)
 
     let gui = {
@@ -122,7 +122,7 @@ export function createGUI({game, gameEvents, boat, humans}: {
 
     gui.gameOverShow = false
 
-    gameEvents.add(((eventData, eventState) => {
+    game.msg.add(((eventData, eventState) => {
         if (eventData.type === GameOverType) {
             gui.gameOverShow = true
         }
@@ -131,7 +131,7 @@ export function createGUI({game, gameEvents, boat, humans}: {
     let restartButtons = $(".restart-button")
     for (const restartButton of restartButtons) {
         restartButton.onclick = ev => {
-            gameEvents.notifyObservers({
+            game.msg.notifyObservers({
                 type: RestartEventType,
             })
             gui.gameOverShow = false

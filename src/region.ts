@@ -7,15 +7,13 @@ import {
     HumanDragStartEventType,
     HumanIdentity
 } from "./human";
-import {GameEvents, Game} from "./game";
+import {GameMsg, Game} from "./game";
 
 /**
  * 主导用户交互，包括以颜色提示放置区域
  */
-export function createRegion({scene, position, width, height, game, gameEvents}: {
-    scene: BABYLON.Scene, position: BABYLON.Vector3, width: number, height: number,
-    gameEvents: GameEvents,
-    game: Game,
+export function createRegion({scene, position, width, height, game}: {
+    scene: BABYLON.Scene, position: BABYLON.Vector3, width: number, height: number, game: Game,
 }) {
     let mesh = BABYLON.MeshBuilder.CreatePlane("region", {
         width,
@@ -49,7 +47,7 @@ export function createRegion({scene, position, width, height, game, gameEvents}:
     }
 
     // 在拖拽时更新选中的region信息
-    gameEvents.add(((eventData, eventState) => {
+    game.msg.add(((eventData, eventState) => {
         let dragInfo = game.humanDrag
         if (!dragInfo.targetRegions.has(region)) {
             return
