@@ -5,9 +5,9 @@ import {createRegion, Region} from "./region";
 import {GameEvents, Game} from "./game";
 import {RestartEventType} from "./gui";
 
-export function createSceneObjs({scene, gameStatus, gameEvents}: {
+export function createSceneObjs({scene, game, gameEvents}: {
     scene: BABYLON.Scene,
-    gameEvents: GameEvents, gameStatus: Game,
+    gameEvents: GameEvents, game: Game,
 }) {
     function createSkyLight() {
         const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
@@ -33,14 +33,14 @@ export function createSceneObjs({scene, gameStatus, gameEvents}: {
     }
 
     let skyLight = createSkyLight()
-    let ground = createGround({scene, gameStatus, gameEvents,})
+    let ground = createGround({scene, game: game, gameEvents,})
 
     let humans = new Set<Human>()
     for (let i = 0; i < 3; i++) {
         humans.add(createHuman({
             scene, identity: 'missionary',
             position: new BABYLON.Vector3(0, 0.5, 0),
-            gameStatus,
+            game: game,
             gameEvents,
         }))
     }
@@ -48,7 +48,7 @@ export function createSceneObjs({scene, gameStatus, gameEvents}: {
         humans.add(createHuman({
             scene, identity: 'cannibal',
             position: new BABYLON.Vector3(0, 0.5, 0),
-            gameStatus,
+            game: game,
             gameEvents,
         }))
     }
@@ -67,7 +67,7 @@ export function createSceneObjs({scene, gameStatus, gameEvents}: {
             position: new BABYLON.Vector3(-30, 0.01, 0),
             width: 20,
             height: 40,
-            gameStatus,
+            game: game,
             gameEvents,
         }),
         rightBank: createRegion({
@@ -75,7 +75,7 @@ export function createSceneObjs({scene, gameStatus, gameEvents}: {
             position: new BABYLON.Vector3(30, 0.01, 0),
             width: 20,
             height: 40,
-            gameStatus,
+            game: game,
             gameEvents,
         }),
         boat: createRegion({
@@ -83,7 +83,7 @@ export function createSceneObjs({scene, gameStatus, gameEvents}: {
             position: new BABYLON.Vector3(0, 0.01, 0),
             width: 20,
             height: 40,
-            gameStatus,
+            game: game,
             gameEvents,
         }),
     }
@@ -91,7 +91,7 @@ export function createSceneObjs({scene, gameStatus, gameEvents}: {
     // 游戏重开
     gameEvents.add(((eventData, eventState) => {
         if (eventData.type === RestartEventType) {
-            gameStatus.restart()
+            game.restart()
         }
     }))
 

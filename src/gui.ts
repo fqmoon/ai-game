@@ -16,8 +16,8 @@ export interface RestartEvent {
 }
 
 // 开船按钮
-function createBoatLeaveButton({gameStatus, gameEvents, boat, humans}: {
-    gameEvents: GameEvents, gameStatus: Game, boat: Region, humans: Iterable<Human>,
+function createBoatLeaveButton({game, gameEvents, boat, humans}: {
+    gameEvents: GameEvents, game: Game, boat: Region, humans: Iterable<Human>,
 }) {
     let button = $.parseHTML(`<button 
             disabled
@@ -49,8 +49,8 @@ function createBoatLeaveButton({gameStatus, gameEvents, boat, humans}: {
     return button
 }
 
-function createGameOver({gameStatus, gameEvents, boat, humans}: {
-    gameEvents: GameEvents, gameStatus: Game, boat: Region, humans: Iterable<Human>,
+function createGameOver({game, gameEvents, boat, humans}: {
+    gameEvents: GameEvents, game: Game, boat: Region, humans: Iterable<Human>,
 }) {
     let div = $.parseHTML(`<div class="model-div">
             <div class="background-ui">
@@ -98,16 +98,16 @@ function injectCss() {
     </style>`)
 }
 
-export function createGUI({gameStatus, gameEvents, boat, humans}: {
-    gameEvents: GameEvents, gameStatus: Game, boat: Region, humans: Iterable<Human>,
+export function createGUI({game, gameEvents, boat, humans}: {
+    gameEvents: GameEvents, game: Game, boat: Region, humans: Iterable<Human>,
 }) {
     injectCss()
 
     let guiDiv = $("#gui")[0]
     guiDiv.style.backgroundColor = "transparent"
-    guiDiv.append(createBoatLeaveButton({gameStatus, gameEvents, boat, humans}))
+    guiDiv.append(createBoatLeaveButton({game, gameEvents, boat, humans}))
 
-    let gameOverUi = createGameOver({gameStatus, gameEvents, boat, humans})
+    let gameOverUi = createGameOver({game, gameEvents, boat, humans})
     guiDiv.append(gameOverUi)
 
     let gui = {

@@ -137,16 +137,16 @@ export function createGame() {
     });
 
     let scene = new BABYLON.Scene(engine)
-    let camera = createCamera({scene, canvas, gameStatus: game, gameEvents})
-    let sceneObjs = createSceneObjs({scene, gameStatus: game, gameEvents})
+    let camera = createCamera({scene, canvas, game: game, gameEvents})
+    let sceneObjs = createSceneObjs({scene, game: game, gameEvents})
     let gui = createGUI({
-        gameStatus: game, gameEvents,
+        game: game, gameEvents,
         boat: sceneObjs.regions.boat,
         humans: sceneObjs.humans
     })
     game.boat = sceneObjs.regions.boat
     let rules = createRules({
-        gameStatus: game, gameEvents, boat: sceneObjs.regions.boat, humans: sceneObjs.humans, scene,
+        game: game, gameEvents: gameEvents, boat: sceneObjs.regions.boat, humans: sceneObjs.humans, scene,
         leftBank: sceneObjs.regions.leftBank,
         rightBank: sceneObjs.regions.rightBank,
     })

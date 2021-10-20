@@ -9,8 +9,8 @@ export interface PointerOnGroundEvent {
     pos: BABYLON.Vector3
 }
 
-export function createGround({scene, gameEvents, gameStatus}: {
-    scene: BABYLON.Scene, gameEvents: GameEvents, gameStatus: Game
+export function createGround({scene, gameEvents, game}: {
+    scene: BABYLON.Scene, gameEvents: GameEvents, game: Game
 }) {
     let mesh = BABYLON.MeshBuilder.CreateGround("ground", {
         width: 100,
@@ -47,8 +47,8 @@ export function createGround({scene, gameEvents, gameStatus}: {
     // 在拖拽移动时发送
     scene.onPointerObservable.add((eventData, eventState) => {
         if (eventData.type === BABYLON.PointerEventTypes.POINTERMOVE
-            && gameStatus.humanDrag.active
-            && gameStatus.humanDrag.dragging
+            && game.humanDrag.active
+            && game.humanDrag.dragging
         ) {
             sendMsg()
         }

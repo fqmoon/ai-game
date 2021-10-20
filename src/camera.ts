@@ -2,9 +2,9 @@ import * as BABYLON from "babylonjs";
 import {GameEvents, Game} from "./game";
 import {HumanDragBeforeEndEventType, HumanDragStartEventType} from "./human";
 
-export function createCamera({scene, canvas, gameStatus, gameEvents}: {
+export function createCamera({scene, canvas, game, gameEvents}: {
     scene: BABYLON.Scene, canvas: HTMLElement,
-    gameEvents: GameEvents, gameStatus: Game,
+    gameEvents: GameEvents, game: Game,
 }) {
     const camera = new BABYLON.ArcRotateCamera(
         "camera", -Math.PI / 2, Math.PI / 2.5, 50, new BABYLON.Vector3(0, 0, 0),

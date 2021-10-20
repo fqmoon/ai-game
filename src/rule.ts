@@ -42,19 +42,19 @@ function getCannibals(humans: Iterable<Human>) {
     return rt
 }
 
-function checkLeftRegion(region: Region, humans: Iterable<Human>, gameEvents: GameEvents, gameStatus: Game) {
+function checkLeftRegion(region: Region, humans: Iterable<Human>, gameEvents: GameEvents, game: Game) {
     let toCheckHumans = getRegionHumans(region, humans)
     let missionaries = getMissionaries(toCheckHumans)
     let cannibals = getCannibals(toCheckHumans)
     if (cannibals.length > missionaries.length && missionaries.length > 0) {
-        gameStatus.status = "over"
+        game.status = "over"
         gameEvents.notifyObservers({
             type: GameOverType,
         })
     }
 }
 
-function checkRightRegion(region: Region, humans: Iterable<Human>, gameEvents: GameEvents, gameStatus: Game) {
+function checkRightRegion(region: Region, humans: Iterable<Human>, gameEvents: GameEvents, game: Game) {
     let toCheckHumans = getRegionHumans(region, humans)
     let missionaries = getMissionaries(toCheckHumans)
     let cannibals = getCannibals(toCheckHumans)
@@ -65,12 +65,12 @@ function checkRightRegion(region: Region, humans: Iterable<Human>, gameEvents: G
     }
 
     if (cannibals.length > missionaries.length && missionaries.length > 0) {
-        gameStatus.status = "over"
+        game.status = "over"
         gameEvents.notifyObservers({
             type: GameOverType,
         })
     } else if (toCheckHumans.length === humanCount) {
-        gameStatus.status = "pass"
+        game.status = "pass"
         gameEvents.notifyObservers({
             type: GamePassType,
         })
@@ -87,8 +87,8 @@ function getRegionHumans(region: Region, humans: Iterable<Human>) {
     return bankHumans
 }
 
-export function createRules({gameStatus, gameEvents, scene, boat, humans, leftBank, rightBank}: {
-    gameEvents: GameEvents, gameStatus: Game, scene: BABYLON.Scene, boat: Region, humans: Iterable<Human>,
+export function createRules({gameEvents, game, scene, boat, humans, leftBank, rightBank}: {
+    gameEvents: GameEvents, game: Game, scene: BABYLON.Scene, boat: Region, humans: Iterable<Human>,
     leftBank: Region, rightBank: Region,
 }) {
     let frameSpeed = 60
@@ -109,7 +109,7 @@ export function createRules({gameStatus, gameEvents, scene, boat, humans, leftBa
     function createAnimations() {
         humanAnims.clear()
 
-        let dstRegion = gameStatus.getDstRegion()
+        let dstRegion = game.getDstRegion()
         let bankHumans = getRegionHumans(boat, humans)
         bankHumans.forEach(human => {
             let {srcPos, dstPos} = putHumanToRegionAndGetPositions(human, dstRegion)
@@ -164,10 +164,10 @@ export function createRules({gameStatus, gameEvents, scene, boat, humans, leftBa
 
     gameEvents.add(async (eventData, eventState) => {
         if (eventData.type === BoatLeaveReadyType) {
-            checkLeftRegion(leftBank, humans, gameEvents, gameStatus)
-            checkRightRegion(rightBank, humans, gameEvents, gameStatus)
+            checkLeftRegion(leftBank, humans, gameEvents, game)
+            checkRightRegion(rightBank, humans, gameEvents, game)
 
-            if (gameStatus.status === "continue") {
+            if (game.status === "continue") {
                 createAnimations()
                 gameEvents.notifyObservers({
                     type: BeforeHumanArriveBankType,
@@ -178,8 +178,8 @@ export function createRules({gameStatus, gameEvents, scene, boat, humans, leftBa
                     type: AfterHumanArriveBankType,
                 })
 
-                checkLeftRegion(leftBank, humans, gameEvents, gameStatus)
-                checkRightRegion(rightBank, humans, gameEvents, gameStatus)
+                checkLeftRegion(leftBank, humans, gameEvents, game)
+                checkRightRegion(rightBank, humans, gameEvents, game)
             }
         }
     })

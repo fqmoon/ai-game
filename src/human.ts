@@ -49,9 +49,9 @@ export interface HumanDragMoveEvent {
     type: typeof HumanDragMoveEventType
 }
 
-export function createHuman({scene, position, identity, gameEvents, gameStatus}: {
+export function createHuman({scene, position, identity, gameEvents, game}: {
     scene: BABYLON.Scene, position: BABYLON.Vector3, identity: HumanIdentity,
-    gameEvents: GameEvents, gameStatus: Game,
+    gameEvents: GameEvents, game: Game,
 }): Human {
 
     let activeColor = new BABYLON.Color3(1, 0, 0)
@@ -100,16 +100,16 @@ export function createHuman({scene, position, identity, gameEvents, gameStatus}:
     // 拖动时根据地形位置更新human位置
     gameEvents.add((eventData, eventState) => {
         if (eventData.type === PointerOnGroundEventType
-            && gameStatus.humanDrag.active
-            && gameStatus.humanDrag.dragging
-            && gameStatus.humanDrag.human === human) {
+            && game.humanDrag.active
+            && game.humanDrag.dragging
+            && game.humanDrag.human === human) {
 
             human.setPos(eventData.pos)
         }
     })
 
     function putIntoRegion() {
-        let dragInfo = gameStatus.humanDrag
+        let dragInfo = game.humanDrag
         if (dragInfo.reachedRegion) { // 放置成功
             dragInfo.reachedRegion.putHuman(human)
         }
@@ -118,23 +118,23 @@ export function createHuman({scene, position, identity, gameEvents, gameStatus}:
     }
 
     function updateByRegionActive() {
-        if (human.region && gameStatus.humanDrag.targetRegions.has(human.region)) { // 如果当前region激活
+        if (human.region && game.humanDrag.targetRegions.has(human.region)) { // 如果当前region激活
             material.diffuseColor.copyFrom(activeColor)
         } else { // 否则
             material.diffuseColor.copyFrom(inactiveColor)
         }
     }
 
-    gameStatus.onNextRegionChangedObservable.add(eventData => {
+    game.onNextRegionChangedObservable.add(eventData => {
         updateByRegionActive()
     })
 
     // 拖动
     scene.onPointerObservable.add((pointerInfo, eventState) => {
-        if (!gameStatus.humanDrag.active)
+        if (!game.humanDrag.active)
             return
 
-        let dragInfo = gameStatus.humanDrag
+        let dragInfo = game.humanDrag
         if (!human.region || !dragInfo.targetRegions.has(human.region))
             return
 
