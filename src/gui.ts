@@ -2,7 +2,7 @@ import {GameMsg, Game} from "./game";
 import * as $ from "jquery"
 import {Human, HumanDragAfterEndEventType} from "./human";
 import {Region} from "./region";
-import {AfterHumanArriveBankType, BeforeHumanArriveBankType, GameOverType} from "./rule";
+import {AfterHumanArriveBankType, BeforeHumanArriveBankType} from "./rule";
 
 export const BoatLeaveButtonClickEventType = "BoatLeaveEvent"
 
@@ -44,7 +44,7 @@ function createBoatLeaveButton({game, boat, humans}: {
     return button
 }
 
-function createGameOver({game, boat, humans}: {
+function createGameFailed({game, boat, humans}: {
     game: Game, boat: Region, humans: Iterable<Human>,
 }) {
     let div = $.parseHTML(`<div class="model-div">
@@ -102,24 +102,24 @@ export function createGUI({game, boat, humans}: {
     guiDiv.style.backgroundColor = "transparent"
     guiDiv.append(createBoatLeaveButton({game, boat, humans}))
 
-    let gameOverUi = createGameOver({game, boat, humans})
-    guiDiv.append(gameOverUi)
+    let gameFailedUi = createGameFailed({game, boat, humans})
+    guiDiv.append(gameFailedUi)
 
     let gui = {
         rootDiv: guiDiv,
-        set gameOverShow(v: boolean) {
+        set gameFailedShow(v: boolean) {
             if (v)
-                gameOverUi.style.display = 'block'
+                gameFailedUi.style.display = 'block'
             else
-                gameOverUi.style.display = 'none'
+                gameFailedUi.style.display = 'none'
         }
     }
 
-    gui.gameOverShow = false
+    gui.gameFailedShow = false
 
-    game.msg.add(((eventData, eventState) => {
-        if (eventData.type === GameOverType) {
-            gui.gameOverShow = true
+    game.onStatusChangedObservable.add(((eventData, eventState) => {
+        if (game.status === "failed") {
+            gui.gameFailedShow = true
         }
     }))
 
@@ -127,7 +127,7 @@ export function createGUI({game, boat, humans}: {
     for (const restartButton of restartButtons) {
         restartButton.onclick = ev => {
             game.restart()
-            gui.gameOverShow = false
+            gui.gameFailedShow = false
         }
     }
 

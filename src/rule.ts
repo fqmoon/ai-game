@@ -5,7 +5,6 @@ import * as BABYLON from "babylonjs";
 
 export const BeforeHumanArriveBankType = "BeforeHumanArriveBank"
 export const AfterHumanArriveBankType = "AfterHumanArriveBank"
-export const GameOverType = "GameOver"
 export const GamePassType = "GamePass"
 
 export interface BeforeHumanArriveBank {
@@ -14,10 +13,6 @@ export interface BeforeHumanArriveBank {
 
 export interface AfterHumanArriveBank {
     type: typeof AfterHumanArriveBankType
-}
-
-export interface GameOver {
-    type: typeof GameOverType
 }
 
 export interface GamePass {
@@ -47,10 +42,7 @@ function checkLeftRegion(region: Region, humans: Iterable<Human>, game: Game) {
     let missionaries = getMissionaries(toCheckHumans)
     let cannibals = getCannibals(toCheckHumans)
     if (cannibals.length > missionaries.length && missionaries.length > 0) {
-        game.status = "over"
-        game.msg.notifyObservers({
-            type: GameOverType,
-        })
+        game.status = "failed"
     }
 }
 
@@ -65,15 +57,9 @@ function checkRightRegion(region: Region, humans: Iterable<Human>, game: Game) {
     }
 
     if (cannibals.length > missionaries.length && missionaries.length > 0) {
-        game.status = "over"
-        game.msg.notifyObservers({
-            type: GameOverType,
-        })
+        game.status = "failed"
     } else if (toCheckHumans.length === humanCount) {
         game.status = "pass"
-        game.msg.notifyObservers({
-            type: GamePassType,
-        })
     }
 }
 

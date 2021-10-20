@@ -9,7 +9,7 @@ import {
     BoatLeaveButtonClickEventType,
     createGUI,
 } from "./gui";
-import {AfterHumanArriveBank, BeforeHumanArriveBank, createRules, GameOver, GamePass} from "./rule";
+import {AfterHumanArriveBank, BeforeHumanArriveBank, createRules, GamePass} from "./rule";
 
 export type GameEventData =
     PointerOnGroundEvent
@@ -21,7 +21,6 @@ export type GameEventData =
     | BoatLeaveReady
     | BeforeHumanArriveBank
     | AfterHumanArriveBank
-    | GameOver
     | GamePass
 export type GameMsg = BABYLON.Observable<GameEventData>
 
@@ -51,7 +50,7 @@ export interface Game {
     getDstRegion(): Region
 
     // 分别对应游戏继续、失败、过关
-    status: "continue" | "over" | "pass"
+    status: "continue" | "failed" | "pass"
 
     msg: BABYLON.Observable<GameEventData>
     onNextRegionChangedObservable: BABYLON.Observable<void>
