@@ -2,8 +2,7 @@ import * as BABYLON from "babylonjs";
 import {PointerOnGroundEventType} from "./ground";
 import {SlotManager, SlotPos} from "./slot";
 import {Region} from "./region";
-import {BoatLeaveReadyType, GameMsg, Game} from "./game";
-import {RestartEventType} from "./gui";
+import {Game} from "./game";
 
 export type HumanIdentity = 'missionary' | 'cannibal'
 

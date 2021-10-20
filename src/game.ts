@@ -8,7 +8,6 @@ import {
     BoatLeaveButtonClickEvent,
     BoatLeaveButtonClickEventType,
     createGUI,
-    RestartEvent,
 } from "./gui";
 import {AfterHumanArriveBank, BeforeHumanArriveBank, createRules, GameOver, GamePass} from "./rule";
 
@@ -24,7 +23,6 @@ export type GameEventData =
     | AfterHumanArriveBank
     | GameOver
     | GamePass
-    | RestartEvent
 export type GameMsg = BABYLON.Observable<GameEventData>
 
 export const BoatLeaveReadyType = "BoatLeaveReady"

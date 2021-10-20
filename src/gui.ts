@@ -5,14 +5,9 @@ import {Region} from "./region";
 import {AfterHumanArriveBankType, BeforeHumanArriveBankType, GameOverType} from "./rule";
 
 export const BoatLeaveButtonClickEventType = "BoatLeaveEvent"
-export const RestartEventType = "RestartEvent"
 
 export interface BoatLeaveButtonClickEvent {
     type: typeof BoatLeaveButtonClickEventType
-}
-
-export interface RestartEvent {
-    type: typeof RestartEventType
 }
 
 // 开船按钮
@@ -131,9 +126,7 @@ export function createGUI({game, boat, humans}: {
     let restartButtons = $(".restart-button")
     for (const restartButton of restartButtons) {
         restartButton.onclick = ev => {
-            game.msg.notifyObservers({
-                type: RestartEventType,
-            })
+            game.restart()
             gui.gameOverShow = false
         }
     }
