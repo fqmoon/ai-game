@@ -2,12 +2,12 @@ import * as BABYLON from "babylonjs";
 import {createHuman, Human} from "./human";
 import {createGround} from "./ground";
 import {createRegion, Region} from "./region";
-import {GameEvents, GameStatus} from "./game";
+import {GameEvents, Game} from "./game";
 import {RestartEventType} from "./gui";
 
 export function createSceneObjs({scene, gameStatus, gameEvents}: {
     scene: BABYLON.Scene,
-    gameEvents: GameEvents, gameStatus: GameStatus,
+    gameEvents: GameEvents, gameStatus: Game,
 }) {
     function createSkyLight() {
         const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);

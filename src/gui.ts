@@ -1,4 +1,4 @@
-import {GameEvents, GameStatus} from "./game";
+import {GameEvents, Game} from "./game";
 import * as $ from "jquery"
 import {Human, HumanDragAfterEndEventType} from "./human";
 import {Region} from "./region";
@@ -17,7 +17,7 @@ export interface RestartEvent {
 
 // 开船按钮
 function createBoatLeaveButton({gameStatus, gameEvents, boat, humans}: {
-    gameEvents: GameEvents, gameStatus: GameStatus, boat: Region, humans: Iterable<Human>,
+    gameEvents: GameEvents, gameStatus: Game, boat: Region, humans: Iterable<Human>,
 }) {
     let button = $.parseHTML(`<button 
             disabled
@@ -50,7 +50,7 @@ function createBoatLeaveButton({gameStatus, gameEvents, boat, humans}: {
 }
 
 function createGameOver({gameStatus, gameEvents, boat, humans}: {
-    gameEvents: GameEvents, gameStatus: GameStatus, boat: Region, humans: Iterable<Human>,
+    gameEvents: GameEvents, gameStatus: Game, boat: Region, humans: Iterable<Human>,
 }) {
     let div = $.parseHTML(`<div class="model-div">
             <div class="background-ui">
@@ -99,7 +99,7 @@ function injectCss() {
 }
 
 export function createGUI({gameStatus, gameEvents, boat, humans}: {
-    gameEvents: GameEvents, gameStatus: GameStatus, boat: Region, humans: Iterable<Human>,
+    gameEvents: GameEvents, gameStatus: Game, boat: Region, humans: Iterable<Human>,
 }) {
     injectCss()
 

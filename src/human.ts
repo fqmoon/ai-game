@@ -2,7 +2,7 @@ import * as BABYLON from "babylonjs";
 import {PointerOnGroundEventType} from "./ground";
 import {SlotManager, SlotPos} from "./slot";
 import {Region} from "./region";
-import {BoatLeaveReadyType, GameEvents, GameStatus} from "./game";
+import {BoatLeaveReadyType, GameEvents, Game} from "./game";
 import {RestartEventType} from "./gui";
 
 export type HumanIdentity = 'missionary' | 'cannibal'
@@ -51,7 +51,7 @@ export interface HumanDragMoveEvent {
 
 export function createHuman({scene, position, identity, gameEvents, gameStatus}: {
     scene: BABYLON.Scene, position: BABYLON.Vector3, identity: HumanIdentity,
-    gameEvents: GameEvents, gameStatus: GameStatus,
+    gameEvents: GameEvents, gameStatus: Game,
 }): Human {
 
     let activeColor = new BABYLON.Color3(1, 0, 0)

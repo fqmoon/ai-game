@@ -1,5 +1,5 @@
 import * as BABYLON from "babylonjs";
-import {GameEvents, GameStatus} from "./game";
+import {GameEvents, Game} from "./game";
 import {HumanDragStartEventType} from "./human";
 
 export const PointerOnGroundEventType = "PointerOnGroundEvent"
@@ -10,7 +10,7 @@ export interface PointerOnGroundEvent {
 }
 
 export function createGround({scene, gameEvents, gameStatus}: {
-    scene: BABYLON.Scene, gameEvents: GameEvents, gameStatus: GameStatus
+    scene: BABYLON.Scene, gameEvents: GameEvents, gameStatus: Game
 }) {
     let mesh = BABYLON.MeshBuilder.CreateGround("ground", {
         width: 100,

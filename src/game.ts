@@ -33,7 +33,7 @@ export interface BoatLeaveReady {
     type: typeof BoatLeaveReadyType
 }
 
-export interface GameStatus {
+export interface Game {
     // human拖拽状态信息
     humanDrag: {
         active: boolean
@@ -69,7 +69,7 @@ export function createGame() {
 
     let _status = "continue"
     // @ts-ignore
-    let gameStatus: GameStatus = {
+    let game: Game = {
         // @ts-ignore
         humanDrag: {
             active: true,
@@ -100,16 +100,16 @@ export function createGame() {
         onStatusChangedObservable: new BABYLON.Observable(),
         changeNextRegion() {
             let lastRegion, nextRegion
-            if (gameStatus.humanDrag.targetRegions.has(regions.leftBank)) {
+            if (game.humanDrag.targetRegions.has(regions.leftBank)) {
                 lastRegion = regions.leftBank
                 nextRegion = regions.rightBank
-                gameStatus.humanDrag.targetRegions.delete(regions.leftBank)
-                gameStatus.humanDrag.targetRegions.add(regions.rightBank)
-            } else if (gameStatus.humanDrag.targetRegions.has(regions.rightBank)) {
+                game.humanDrag.targetRegions.delete(regions.leftBank)
+                game.humanDrag.targetRegions.add(regions.rightBank)
+            } else if (game.humanDrag.targetRegions.has(regions.rightBank)) {
                 lastRegion = regions.rightBank
                 nextRegion = regions.leftBank
-                gameStatus.humanDrag.targetRegions.delete(regions.rightBank)
-                gameStatus.humanDrag.targetRegions.add(regions.leftBank)
+                game.humanDrag.targetRegions.delete(regions.rightBank)
+                game.humanDrag.targetRegions.add(regions.leftBank)
             } else {
                 throw Error("change region failed")
             }
@@ -120,12 +120,12 @@ export function createGame() {
             for (const human of sceneObjs.humans) {
                 regions.leftBank.putHuman(human)
             }
-            let dragInfo = gameStatus.humanDrag
+            let dragInfo = game.humanDrag
             dragInfo.targetRegions.clear()
             dragInfo.targetRegions.add(regions.leftBank)
             dragInfo.targetRegions.add(regions.boat)
-            gameStatus.onNextRegionChangedObservable.notifyObservers()
-            gameStatus.status = "continue"
+            game.onNextRegionChangedObservable.notifyObservers()
+            game.status = "continue"
         },
     }
 
@@ -137,16 +137,16 @@ export function createGame() {
     });
 
     let scene = new BABYLON.Scene(engine)
-    let camera = createCamera({scene, canvas, gameStatus, gameEvents})
-    let sceneObjs = createSceneObjs({scene, gameStatus, gameEvents})
+    let camera = createCamera({scene, canvas, gameStatus: game, gameEvents})
+    let sceneObjs = createSceneObjs({scene, gameStatus: game, gameEvents})
     let gui = createGUI({
-        gameStatus, gameEvents,
+        gameStatus: game, gameEvents,
         boat: sceneObjs.regions.boat,
         humans: sceneObjs.humans
     })
-    gameStatus.boat = sceneObjs.regions.boat
+    game.boat = sceneObjs.regions.boat
     let rules = createRules({
-        gameStatus, gameEvents, boat: sceneObjs.regions.boat, humans: sceneObjs.humans, scene,
+        gameStatus: game, gameEvents, boat: sceneObjs.regions.boat, humans: sceneObjs.humans, scene,
         leftBank: sceneObjs.regions.leftBank,
         rightBank: sceneObjs.regions.rightBank,
     })
@@ -156,12 +156,12 @@ export function createGame() {
 
     // 初始化
     {
-        gameStatus.restart()
+        game.restart()
 
         // 响应开船事件，切换region
         gameEvents.add((eventData, eventState) => {
             if (eventData.type === BoatLeaveButtonClickEventType) {
-                gameStatus.changeNextRegion()
+                game.changeNextRegion()
                 gameEvents.notifyObservers({
                     type: BoatLeaveReadyType,
                 })
@@ -169,22 +169,15 @@ export function createGame() {
         })
     }
 
-    return {
-        events: gameEvents,
-        status: gameStatus,
-        engine,
-        canvas,
-        scene,
-        sceneObjs,
-        camera,
-        start: () => {
-            engine.runRenderLoop(function () {
-                if (scene && scene.activeCamera) {
-                    scene.render();
-                }
-            });
-        },
+    function start() {
+        engine.runRenderLoop(function () {
+            if (scene && scene.activeCamera) {
+                scene.render();
+            }
+        });
     }
-}
 
-export type Game = ReturnType<typeof createGame>
+    start()
+
+    return game
+}

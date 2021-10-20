@@ -1,4 +1,4 @@
-import {BoatLeaveReadyType, Game, GameEvents, GameStatus} from "./game";
+import {BoatLeaveReadyType, Game, GameEvents} from "./game";
 import {Region} from "./region";
 import {Human} from "./human";
 import * as BABYLON from "babylonjs";
@@ -42,7 +42,7 @@ function getCannibals(humans: Iterable<Human>) {
     return rt
 }
 
-function checkLeftRegion(region: Region, humans: Iterable<Human>, gameEvents: GameEvents, gameStatus: GameStatus) {
+function checkLeftRegion(region: Region, humans: Iterable<Human>, gameEvents: GameEvents, gameStatus: Game) {
     let toCheckHumans = getRegionHumans(region, humans)
     let missionaries = getMissionaries(toCheckHumans)
     let cannibals = getCannibals(toCheckHumans)
@@ -54,7 +54,7 @@ function checkLeftRegion(region: Region, humans: Iterable<Human>, gameEvents: Ga
     }
 }
 
-function checkRightRegion(region: Region, humans: Iterable<Human>, gameEvents: GameEvents, gameStatus: GameStatus) {
+function checkRightRegion(region: Region, humans: Iterable<Human>, gameEvents: GameEvents, gameStatus: Game) {
     let toCheckHumans = getRegionHumans(region, humans)
     let missionaries = getMissionaries(toCheckHumans)
     let cannibals = getCannibals(toCheckHumans)
@@ -88,7 +88,7 @@ function getRegionHumans(region: Region, humans: Iterable<Human>) {
 }
 
 export function createRules({gameStatus, gameEvents, scene, boat, humans, leftBank, rightBank}: {
-    gameEvents: GameEvents, gameStatus: GameStatus, scene: BABYLON.Scene, boat: Region, humans: Iterable<Human>,
+    gameEvents: GameEvents, gameStatus: Game, scene: BABYLON.Scene, boat: Region, humans: Iterable<Human>,
     leftBank: Region, rightBank: Region,
 }) {
     let frameSpeed = 60
@@ -178,8 +178,8 @@ export function createRules({gameStatus, gameEvents, scene, boat, humans, leftBa
                     type: AfterHumanArriveBankType,
                 })
 
-                checkLeftRegion(leftBank, humans, gameEvents,gameStatus)
-                checkRightRegion(rightBank, humans, gameEvents,gameStatus)
+                checkLeftRegion(leftBank, humans, gameEvents, gameStatus)
+                checkRightRegion(rightBank, humans, gameEvents, gameStatus)
             }
         }
     })

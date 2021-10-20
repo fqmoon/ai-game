@@ -7,7 +7,7 @@ import {
     HumanDragStartEventType,
     HumanIdentity
 } from "./human";
-import {GameEvents, GameStatus} from "./game";
+import {GameEvents, Game} from "./game";
 
 /**
  * 主导用户交互，包括以颜色提示放置区域
@@ -15,7 +15,7 @@ import {GameEvents, GameStatus} from "./game";
 export function createRegion({scene, position, width, height, gameStatus, gameEvents}: {
     scene: BABYLON.Scene, position: BABYLON.Vector3, width: number, height: number,
     gameEvents: GameEvents,
-    gameStatus: GameStatus,
+    gameStatus: Game,
 }) {
     let mesh = BABYLON.MeshBuilder.CreatePlane("region", {
         width,
