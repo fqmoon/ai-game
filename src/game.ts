@@ -126,7 +126,7 @@ export function createGame() {
             dragInfo.targetRegions.add(regions.boat)
             gameStatus.onNextRegionChangedObservable.notifyObservers()
             gameStatus.status = "continue"
-        }
+        },
     }
 
     let canvas = document.getElementById("game") as HTMLCanvasElement
@@ -156,13 +156,7 @@ export function createGame() {
 
     // 初始化
     {
-        gameStatus.humanDrag.targetRegions.add(regions.leftBank)
-        gameStatus.humanDrag.targetRegions.add(regions.boat)
-
-        // 初始化：将human放入region
-        for (const human of sceneObjs.humans) {
-            regions.leftBank.putHuman(human)
-        }
+        gameStatus.restart()
 
         // 响应开船事件，切换region
         gameEvents.add((eventData, eventState) => {
