@@ -159,11 +159,11 @@ export function createHuman({scene, position, identity, game}: {
 
                 putIntoRegion()
 
-                Object.assign(dragInfo, {
-                    dragging: false,
-                    human: undefined,
-                    reachedRegion: undefined,
-                })
+                // @ts-ignore
+                dragInfo.dragging = false
+                // @ts-ignore
+                dragInfo.human = undefined
+                dragInfo.reachedRegion = undefined
 
                 game.msg.notifyObservers({
                     type: HumanDragAfterEndEventType,

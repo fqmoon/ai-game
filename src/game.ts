@@ -9,7 +9,7 @@ import {
     BoatLeaveButtonClickEventType,
     createGUI,
 } from "./gui";
-import {AfterHumanArriveBank, BeforeHumanArriveBank, createRules, GamePass} from "./rule";
+import {AfterHumanArriveBank, BeforeHumanArriveBank, createRules} from "./rule";
 
 export type GameEventData =
     PointerOnGroundEvent
@@ -21,7 +21,6 @@ export type GameEventData =
     | BoatLeaveReady
     | BeforeHumanArriveBank
     | AfterHumanArriveBank
-    | GamePass
 export type GameMsg = BABYLON.Observable<GameEventData>
 
 export const BoatLeaveReadyType = "BoatLeaveReady"
@@ -32,20 +31,23 @@ export interface BoatLeaveReady {
 
 export type GameStatus = "continue" | "failed" | "pass"
 
+export type HumanDrag = {
+    active: boolean
+    // 拖动起始地。在拖动失败后要将human放回它
+    targetRegions: Set<Region>,
+    reachedRegion?: Region,
+    onDraggingChangedObservable: BABYLON.Observable<boolean>
+} & ({
+    dragging: true,
+    human: Human,
+} | {
+    dragging: false,
+    human: undefined,
+})
+
 export interface Game {
     // human拖拽状态信息
-    humanDrag: {
-        active: boolean
-        // 拖动起始地。在拖动失败后要将human放回它
-        targetRegions: Set<Region>,
-        reachedRegion?: Region,
-    } & ({
-        dragging: true,
-        human: Human,
-    } | {
-        dragging: false,
-        human: undefined,
-    })
+    humanDrag: HumanDrag
 
     boat: Region
 
@@ -67,18 +69,33 @@ export function createGame() {
     // 全局事件处理
     let msg = new BABYLON.Observable() as GameMsg
 
+    function createHumanDrag(): HumanDrag {
+        let _dragging = false
+        let rt = {
+            active: true,
+            get dragging() {
+                return _dragging
+            },
+            set dragging(v) {
+                if (_dragging !== v) {
+                    _dragging = v
+                    this.onDraggingChangedObservable.notifyObservers(_dragging)
+                }
+            },
+            human: undefined,
+            reachedRegion: undefined,
+            targetRegions: new Set(),
+            onDraggingChangedObservable: new BABYLON.Observable(),
+        }
+        // @ts-ignore
+        return rt
+    }
+
     let _status = "continue" as GameStatus
     // @ts-ignore
     let game: Game = {
         msg,
-        // @ts-ignore
-        humanDrag: {
-            active: true,
-            dragging: false,
-            human: undefined,
-            reachedRegion: undefined,
-            targetRegions: new Set(),
-        },
+        humanDrag: createHumanDrag(),
         getDstRegion() {
             for (const region of this.humanDrag.targetRegions) {
                 if (region !== this.boat)

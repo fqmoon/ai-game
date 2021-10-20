@@ -1,11 +1,10 @@
-import {BoatLeaveReadyType, Game, GameMsg} from "./game";
+import {BoatLeaveReadyType, Game} from "./game";
 import {Region} from "./region";
 import {Human} from "./human";
 import * as BABYLON from "babylonjs";
 
 export const BeforeHumanArriveBankType = "BeforeHumanArriveBank"
 export const AfterHumanArriveBankType = "AfterHumanArriveBank"
-export const GamePassType = "GamePass"
 
 export interface BeforeHumanArriveBank {
     type: typeof BeforeHumanArriveBankType
@@ -13,10 +12,6 @@ export interface BeforeHumanArriveBank {
 
 export interface AfterHumanArriveBank {
     type: typeof AfterHumanArriveBankType
-}
-
-export interface GamePass {
-    type: typeof GamePassType
 }
 
 function getMissionaries(humans: Iterable<Human>) {
