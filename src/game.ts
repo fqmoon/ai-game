@@ -4,7 +4,12 @@ import {Human, HumanDragAfterEndEvent, HumanDragBeforeEndEvent, HumanDragMoveEve
 import {Region} from "./region";
 import {PointerOnGroundEvent} from "./ground";
 import {createCamera} from "./camera";
-import {BoatLeaveButtonClickEvent, BoatLeaveButtonClickEventType, createGUI} from "./gui";
+import {
+    BoatLeaveButtonClickEvent,
+    BoatLeaveButtonClickEventType,
+    createGUI,
+    RestartEvent,
+} from "./gui";
 import {AfterHumanArriveBank, BeforeHumanArriveBank, createRules, GameOver, GamePass} from "./rule";
 
 export type GameEventData =
@@ -19,6 +24,7 @@ export type GameEventData =
     | AfterHumanArriveBank
     | GameOver
     | GamePass
+    | RestartEvent
 export type GameEvents = BABYLON.Observable<GameEventData>
 
 export const BoatLeaveReadyType = "BoatLeaveReady"
@@ -49,6 +55,16 @@ export interface GameStatus {
     boat: Region
 
     getDstRegion(): Region
+
+    // 分别对应游戏继续、失败、过关
+    status: "continue" | "over" | "pass"
+
+    onNextRegionChangedObservable: BABYLON.Observable<{
+        lastRegion: Region,
+        nextRegion: Region,
+    }>
+
+    changeNextRegion(): void
 }
 
 export function createGame() {
@@ -70,6 +86,28 @@ export function createGame() {
                     return region
             }
             throw Error("find dst region failed")
+        },
+        status: "continue",
+        onNextRegionChangedObservable: new BABYLON.Observable(),
+        changeNextRegion() {
+            let lastRegion, nextRegion
+            if (gameStatus.humanDrag.targetRegions.has(regions.leftBank)) {
+                lastRegion = regions.leftBank
+                nextRegion = regions.rightBank
+                gameStatus.humanDrag.targetRegions.delete(regions.leftBank)
+                gameStatus.humanDrag.targetRegions.add(regions.rightBank)
+            } else if (gameStatus.humanDrag.targetRegions.has(regions.rightBank)) {
+                lastRegion = regions.rightBank
+                nextRegion = regions.leftBank
+                gameStatus.humanDrag.targetRegions.delete(regions.rightBank)
+                gameStatus.humanDrag.targetRegions.add(regions.leftBank)
+            } else {
+                throw Error("change region failed")
+            }
+
+            this.onNextRegionChangedObservable.notifyObservers({
+                lastRegion, nextRegion
+            })
         }
     }
 

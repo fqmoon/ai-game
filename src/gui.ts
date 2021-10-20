@@ -2,12 +2,17 @@ import {GameEvents, GameStatus} from "./game";
 import * as $ from "jquery"
 import {Human, HumanDragAfterEndEventType} from "./human";
 import {Region} from "./region";
-import {AfterHumanArriveBankType, BeforeHumanArriveBankType} from "./rule";
+import {AfterHumanArriveBankType, BeforeHumanArriveBankType, GameOverType} from "./rule";
 
 export const BoatLeaveButtonClickEventType = "BoatLeaveEvent"
+export const RestartEventType = "RestartEvent"
 
 export interface BoatLeaveButtonClickEvent {
     type: typeof BoatLeaveButtonClickEventType
+}
+
+export interface RestartEvent {
+    type: typeof RestartEventType
 }
 
 // 开船按钮
@@ -47,20 +52,28 @@ function createBoatLeaveButton({gameStatus, gameEvents, boat, humans}: {
 function createGameOver({gameStatus, gameEvents, boat, humans}: {
     gameEvents: GameEvents, gameStatus: GameStatus, boat: Region, humans: Iterable<Human>,
 }) {
-    // 这个div是全屏的阻止用户点击相关事件
-    let div = $.parseHTML(`<div 
-            style="position: absolute;width: 100%; height:100%;"
-        >
+    let div = $.parseHTML(`<div class="model-div">
             <div class="background-ui">
                 <div class="button-container">
-                    <button id="restart">重来</button>
+                    <button class="restart-button">重来</button>
                 </div>
             </div>
         </div>`)[0] as HTMLDivElement
     return div
 }
 
-function injectCss(){
+function createGamePass() {
+    let div = $.parseHTML(`<div class="model-div">
+            <div class="background-ui">
+                <div class="button-container">
+                    <button class="home-button">回到主菜单</button>
+                </div>
+            </div>
+        </div>`)[0] as HTMLDivElement
+    return div
+}
+
+function injectCss() {
     $('head').append(`<style type="text/css">
         div{
             left: 0;
@@ -71,11 +84,16 @@ function injectCss(){
         }
         .background-ui{
             margin: 15%;
+            background-color: #0003;
         }
-        #restart{
-            left: 1em;
+        /* 模态div，阻塞用户事件 */
+        .model-div{
+        }
+        .restart-button{
             bottom: 1em;
             position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
         }
     </style>`)
 }
@@ -85,12 +103,40 @@ export function createGUI({gameStatus, gameEvents, boat, humans}: {
 }) {
     injectCss()
 
-    let guiDiv = document.getElementById("gui") as HTMLDivElement
+    let guiDiv = $("#gui")[0]
     guiDiv.style.backgroundColor = "transparent"
     guiDiv.append(createBoatLeaveButton({gameStatus, gameEvents, boat, humans}))
-    guiDiv.append(createGameOver({gameStatus, gameEvents, boat, humans}))
 
-    return {
+    let gameOverUi = createGameOver({gameStatus, gameEvents, boat, humans})
+    guiDiv.append(gameOverUi)
+
+    let gui = {
         rootDiv: guiDiv,
+        set gameOverShow(v: boolean) {
+            if (v)
+                gameOverUi.style.display = 'block'
+            else
+                gameOverUi.style.display = 'none'
+        }
     }
+
+    gui.gameOverShow = false
+
+    gameEvents.add(((eventData, eventState) => {
+        if (eventData.type === GameOverType) {
+            gui.gameOverShow = true
+        }
+    }))
+
+    let restartButtons = $(".restart-button")
+    for (const restartButton of restartButtons) {
+        restartButton.onclick = ev => {
+            gameEvents.notifyObservers({
+                type: RestartEventType,
+            })
+            gui.gameOverShow = false
+        }
+    }
+
+    return gui
 }
