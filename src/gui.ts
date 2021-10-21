@@ -1,13 +1,7 @@
-import {Game} from "./game";
+import {BoatLeaveReadyType, Game} from "./game";
 import * as $ from "jquery"
 import {Human} from "./human";
 import {Region} from "./region";
-
-export const BoatLeaveButtonClickEventType = "BoatLeaveEvent"
-
-export interface BoatLeaveButtonClickEvent {
-    type: typeof BoatLeaveButtonClickEventType
-}
 
 // 开船按钮
 function createBoatLeaveButton({game, boat, humans}: {
@@ -28,8 +22,11 @@ function createBoatLeaveButton({game, boat, humans}: {
 
     // 通知开船
     button.onclick = ev => {
+        game.changeNextRegion()
+
+        // 响应开船事件，切换region
         game.msg.notifyObservers({
-            type: BoatLeaveButtonClickEventType,
+            type: BoatLeaveReadyType,
         })
     }
 

@@ -4,16 +4,11 @@ import {Human} from "./human";
 import {Region} from "./region";
 import {PointerOnGroundEvent} from "./ground";
 import {createCamera} from "./camera";
-import {
-    BoatLeaveButtonClickEvent,
-    BoatLeaveButtonClickEventType,
-    createGUI,
-} from "./gui";
+import {createGUI} from "./gui";
 import {AfterHumanArriveBank, BeforeHumanArriveBank, createRules} from "./rule";
 
 export type GameMsgData =
     PointerOnGroundEvent
-    | BoatLeaveButtonClickEvent
     | BoatLeaveReady
     | BeforeHumanArriveBank
     | AfterHumanArriveBank
@@ -253,20 +248,7 @@ export function createGame() {
     let ground = sceneObjs.ground
     let regions = sceneObjs.regions
 
-    // 初始化
-    {
-        game.restart()
-
-        // 响应开船事件，切换region
-        msg.add((eventData, eventState) => {
-            if (eventData.type === BoatLeaveButtonClickEventType) {
-                game.changeNextRegion()
-                msg.notifyObservers({
-                    type: BoatLeaveReadyType,
-                })
-            }
-        })
-    }
+    game.restart()
 
     function start() {
         engine.runRenderLoop(function () {
