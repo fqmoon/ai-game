@@ -58,6 +58,7 @@ export function createHuman({scene, position, identity, game}: {
         dragYOff: 3,
         slotManager: undefined,
         slotPos: undefined,
+        // TODO 更名为private或直接删掉
         region: undefined,
         setPos(pos: BABYLON.Vector3) {
             mesh.position.copyFrom(pos)

@@ -5,12 +5,10 @@ import {Region} from "./region";
 import {PointerOnGroundEvent} from "./ground";
 import {createCamera} from "./camera";
 import {createGUI} from "./gui";
-import {AfterHumanArriveBank, BeforeHumanArriveBank, createRules} from "./rule";
+import {createRules} from "./rule";
 
 export type GameMsgData =
     PointerOnGroundEvent
-    | BeforeHumanArriveBank
-    | AfterHumanArriveBank
 export type GameMsg = BABYLON.Observable<GameMsgData>
 
 export type GameStatus = "continue" | "failed" | "pass"

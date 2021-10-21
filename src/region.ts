@@ -68,13 +68,10 @@ export function createRegion({scene, position, width, height, game}: {
         }
     })
 
+    let _humans = new Set<Human>()
+
     function getHumanCount() {
-        let count = 0
-        for (const key of Object.keys(slotManagers)) {
-            // @ts-ignore
-            count += slotManagers[key].size
-        }
-        return count
+        return _humans.size
     }
 
     let region = {
@@ -82,6 +79,12 @@ export function createRegion({scene, position, width, height, game}: {
         slotManagers,
         get humanCount() {
             return getHumanCount()
+        },
+        hasHuman(human: Human) {
+            return _humans.has(human)
+        },
+        get humans() {
+            return _humans
         },
         putHuman(human: Human) {
             if (human.region === region)
@@ -101,6 +104,7 @@ export function createRegion({scene, position, width, height, game}: {
                 human.slotManager = newSlotManager
                 human.slotPos = res.slotPos
                 human.region = region
+                _humans.add(human)
                 this.onAfterHumanCountChangeObservable.notifyObservers(getHumanCount())
             }
             return !!res
@@ -119,7 +123,7 @@ export function createRegion({scene, position, width, height, game}: {
             human.slotManager = undefined
             human.slotPos = undefined
             human.region = undefined
-
+            _humans.delete(human)
             this.onAfterHumanCountChangeObservable.notifyObservers(getHumanCount())
         },
         resetHumanPos(human: Human) {
