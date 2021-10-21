@@ -1,4 +1,4 @@
-import {BoatLeaveReadyType, Game} from "./game";
+import {Game} from "./game";
 import {Region} from "./region";
 import {Human} from "./human";
 import * as BABYLON from "babylonjs";
@@ -143,25 +143,26 @@ export function createRules({game, scene, boat, humans, leftBank, rightBank}: {
         return Promise.all(promises)
     }
 
-    game.msg.add(async (eventData, eventState) => {
-        if (eventData.type === BoatLeaveReadyType) {
-            checkLeftRegion(leftBank, humans, game)
-            checkRightRegion(rightBank, humans, game)
+    function checkBanks() {
+        checkLeftRegion(leftBank, humans, game)
+        checkRightRegion(rightBank, humans, game)
+    }
 
-            if (game.status === "continue") {
-                createAnimations()
-                game.msg.notifyObservers({
-                    type: BeforeHumanArriveBankType,
-                })
-                await beginAnimations()
+    game.onAfterNextRegionChangeObservable.add(async () => {
+        checkBanks()
 
-                game.msg.notifyObservers({
-                    type: AfterHumanArriveBankType,
-                })
+        if (game.status === "continue") {
+            createAnimations()
+            game.msg.notifyObservers({
+                type: BeforeHumanArriveBankType,
+            })
+            await beginAnimations()
 
-                checkLeftRegion(leftBank, humans, game)
-                checkRightRegion(rightBank, humans, game)
-            }
+            game.msg.notifyObservers({
+                type: AfterHumanArriveBankType,
+            })
+
+            checkBanks()
         }
     })
 }

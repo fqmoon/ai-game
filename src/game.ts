@@ -43,6 +43,11 @@ export type HumanDrag = {
     onAfterReachedRegionChangeObservable: BABYLON.Observable<Region | undefined>
 }
 
+export interface ValueChange<T> {
+    from: T
+    to: T
+}
+
 export interface Game {
     humanDrag: HumanDrag
     boat: Region
@@ -50,7 +55,8 @@ export interface Game {
     status: GameStatus
     msg: BABYLON.Observable<GameMsgData>
     onAfterNextRegionChangeObservable: BABYLON.Observable<void>
-    onAfterStatusChangeObservable: BABYLON.Observable<GameStatus>
+    onBeforeStatusChangeObservable: BABYLON.Observable<ValueChange<GameStatus>>
+    onAfterStatusChangeObservable: BABYLON.Observable<ValueChange<GameStatus>>
 
     getDstRegion(): Region
 
@@ -193,11 +199,16 @@ export function createGame() {
         },
         set status(v) {
             if (_status !== v) {
+                let from = _status
+                let to = v
+
+                this.onBeforeStatusChangeObservable.notifyObservers({from, to})
                 _status = v
-                this.onAfterStatusChangeObservable.notifyObservers(_status)
+                this.onAfterStatusChangeObservable.notifyObservers({from, to})
             }
         },
         onAfterNextRegionChangeObservable: new BABYLON.Observable(),
+        onBeforeStatusChangeObservable: new BABYLON.Observable(),
         onAfterStatusChangeObservable: new BABYLON.Observable(),
         changeNextRegion() {
             let lastRegion, nextRegion

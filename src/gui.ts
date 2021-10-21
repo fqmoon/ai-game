@@ -1,4 +1,4 @@
-import {BoatLeaveReadyType, Game} from "./game";
+import {Game} from "./game";
 import * as $ from "jquery"
 import {Human} from "./human";
 import {Region} from "./region";
@@ -23,11 +23,6 @@ function createBoatLeaveButton({game, boat, humans}: {
     // 通知开船
     button.onclick = ev => {
         game.changeNextRegion()
-
-        // 响应开船事件，切换region
-        game.msg.notifyObservers({
-            type: BoatLeaveReadyType,
-        })
     }
 
     return button
@@ -114,10 +109,10 @@ export function createGUI({game, boat, humans}: {
     gui.gamePassUiShow = false
 
     game.onAfterStatusChangeObservable.add(status => {
-        if (status === "failed") {
+        if (status.to === "failed") {
             gui.gameFailedShow = true
             gui.gamePassUiShow = false
-        } else if (status === "pass") {
+        } else if (status.to === "pass") {
             gui.gameFailedShow = false
             gui.gamePassUiShow = true
         } else {
