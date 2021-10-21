@@ -9,16 +9,9 @@ import {AfterHumanArriveBank, BeforeHumanArriveBank, createRules} from "./rule";
 
 export type GameMsgData =
     PointerOnGroundEvent
-    | BoatLeaveReady
     | BeforeHumanArriveBank
     | AfterHumanArriveBank
 export type GameMsg = BABYLON.Observable<GameMsgData>
-
-export const BoatLeaveReadyType = "BoatLeaveReady"
-
-export interface BoatLeaveReady {
-    type: typeof BoatLeaveReadyType
-}
 
 export type GameStatus = "continue" | "failed" | "pass"
 
