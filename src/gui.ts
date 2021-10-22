@@ -22,7 +22,7 @@ function createBoatLeaveButton({game, boat, humans}: {
 
     // 通知开船
     button.onclick = ev => {
-        game.changeNextRegion()
+        game.changeBank()
     }
 
     return button

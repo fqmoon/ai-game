@@ -18,8 +18,8 @@ export type GameStatus = "continue" | "failed" | "pass"
 export type HumanDrag = {
     active: boolean
     readonly dragging: boolean
-    // 对拖动激活的regions
-    activeRegions: Set<Region>,
+    // 对拖动激活的regions。注意对它的值是临时的，对其修改是无效的
+    readonly activeRegions: Set<Region>,
     readonly reachedRegion?: Region,
     readonly human?: Human,
     readonly lastHuman?: Human,
@@ -42,7 +42,9 @@ export interface ValueChange<T> {
 
 export interface Game {
     humanDrag: HumanDrag
-    boat: Region
+    readonly boat: Region
+    readonly curBank: Region
+    readonly nextBank: Region
     // 分别对应游戏继续、失败、过关
     status: GameStatus
     msg: BABYLON.Observable<GameMsgData>
@@ -51,14 +53,14 @@ export interface Game {
             play(): Promise<void>
         }
     }
-    onBeforeNextRegionChangeObservable: BABYLON.Observable<void>
-    onAfterNextRegionChangeObservable: BABYLON.Observable<void>
+    onBeforeBankChangeObservable: BABYLON.Observable<void>
+    onAfterBankChangeObservable: BABYLON.Observable<void>
     onBeforeStatusChangeObservable: BABYLON.Observable<ValueChange<GameStatus>>
     onAfterStatusChangeObservable: BABYLON.Observable<ValueChange<GameStatus>>
 
     getDstRegion(): Region
 
-    changeNextRegion(): void
+    changeBank(): void
 
     restart(): void
 }
@@ -94,7 +96,9 @@ export function createGame() {
             get reachedRegion() {
                 return getTouchedRegion()
             },
-            activeRegions: new Set(),
+            get activeRegions() {
+                return new Set([game.boat, game.curBank])
+            },
             onBeforeDraggingHumanChangeObservable: new BABYLON.Observable(),
             onAfterDraggingHumanChangeObservable: new BABYLON.Observable(),
             onDraggingPointerMoveObservable: new BABYLON.Observable(),
@@ -205,43 +209,49 @@ export function createGame() {
                 this.onAfterStatusChangeObservable.notifyObservers({from, to})
             }
         },
-        onAfterNextRegionChangeObservable: new BABYLON.Observable(),
+        onBeforeBankChangeObservable: new BABYLON.Observable(),
+        onAfterBankChangeObservable: new BABYLON.Observable(),
         onBeforeStatusChangeObservable: new BABYLON.Observable(),
         onAfterStatusChangeObservable: new BABYLON.Observable(),
-        changeNextRegion() {
-            let lastRegion, nextRegion
-            if (game.humanDrag.activeRegions.has(regions.leftBank)) {
-                lastRegion = regions.leftBank
-                nextRegion = regions.rightBank
-                game.humanDrag.activeRegions.delete(regions.leftBank)
-                game.humanDrag.activeRegions.add(regions.rightBank)
-            } else if (game.humanDrag.activeRegions.has(regions.rightBank)) {
-                lastRegion = regions.rightBank
-                nextRegion = regions.leftBank
-                game.humanDrag.activeRegions.delete(regions.rightBank)
-                game.humanDrag.activeRegions.add(regions.leftBank)
-            } else {
-                throw Error("change region failed")
-            }
-
-            this.onAfterNextRegionChangeObservable.notifyObservers()
+        changeBank() {
+            this.onBeforeBankChangeObservable.notifyObservers()
+            let tmp = _curBank
+            _curBank = _nextBank
+            _nextBank = tmp
+            this.onAfterBankChangeObservable.notifyObservers()
         },
         restart() {
-            for (const human of sceneObjs.humans) {
-                regions.leftBank.putHuman(human)
+            // 重置human
+            {
+                for (const human of sceneObjs.humans) {
+                    sceneObjs.regions.leftBank.putHuman(human)
+                }
             }
-            let dragInfo = game.humanDrag
-            dragInfo.activeRegions.clear()
-            dragInfo.activeRegions.add(regions.leftBank)
-            dragInfo.activeRegions.add(regions.boat)
-            game.onAfterNextRegionChangeObservable.notifyObservers()
+            // 重置bank
+            {
+                this.onBeforeBankChangeObservable.notifyObservers()
+                _curBank = sceneObjs.regions.leftBank
+                _nextBank = sceneObjs.regions.rightBank
+                this.onAfterBankChangeObservable.notifyObservers()
+            }
             game.status = "continue"
         },
+        get boat() {
+            return _boat
+        },
+        get curBank() {
+            return _curBank
+        },
+        get nextBank() {
+            return _nextBank
+        }
     }
 
     let camera = createCamera({scene, canvas, game: game,})
     let sceneObjs = createSceneObjs({scene, game: game,})
-    game.boat = sceneObjs.regions.boat
+    let _boat = sceneObjs.regions.boat
+    let _curBank = sceneObjs.regions.leftBank
+    let _nextBank = sceneObjs.regions.rightBank
     let gui = createGUI({
         game: game,
         boat: sceneObjs.regions.boat,

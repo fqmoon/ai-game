@@ -66,7 +66,7 @@ export function createRules({game, scene, boat, humans, leftBank, rightBank}: {
         checkRightRegion(rightBank, humans, game)
     }
 
-    game.onAfterNextRegionChangeObservable.add(async () => {
+    game.onAfterBankChangeObservable.add(async () => {
         checkBanks()
 
         if (game.status === "continue") {

@@ -103,7 +103,7 @@ export function createHuman({scene, position, identity, game}: {
         }
     }
 
-    game.onAfterNextRegionChangeObservable.add(eventData => {
+    game.onAfterBankChangeObservable.add(eventData => {
         updateByRegionActive()
     })
 
