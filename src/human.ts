@@ -1,5 +1,4 @@
 import * as BABYLON from "babylonjs";
-import {PointerOnGroundEventType} from "./ground";
 import {SlotManager, SlotPos} from "./slot";
 import {Region} from "./region";
 import {Game} from "./game";
@@ -75,17 +74,6 @@ export function createHuman({scene, position, identity, game}: {
         gameObjType: "Human",
     }
 
-    // 拖动时根据地形位置更新human位置
-    game.msg.add((eventData, eventState) => {
-        if (eventData.type === PointerOnGroundEventType
-            && game.humanDrag.active
-            && game.humanDrag.dragging
-            && game.humanDrag.human === human) {
-
-            human.setPos(eventData.pos)
-        }
-    })
-
     function putIntoRegion() {
         let dragInfo = game.humanDrag
         if (dragInfo.human === human && dragInfo.reachedRegion) { // 放置成功
@@ -103,14 +91,32 @@ export function createHuman({scene, position, identity, game}: {
         }
     }
 
-    game.onAfterBankChangeObservable.add(eventData => {
-        updateByRegionActive()
+    function updatePos() {
+        if (game.humanDrag.human !== human)
+            return
+
+        let pos = game.humanDrag.pointerPosOnGround
+        if (pos)
+            human.setPos(pos)
+    }
+
+    game.humanDrag.onAfterDraggingStatusChangeObservable.add(status => {
+        if (status === 'draggingStart')
+            updatePos()
+    })
+
+    game.humanDrag.onDraggingPointerMoveObservable.add(() => {
+        updatePos()
     })
 
     game.humanDrag.onBeforeDraggingStatusChangeObservable.add(status => {
         if (status === 'draggingEnd') {
             putIntoRegion()
         }
+    })
+
+    game.onAfterBankChangeObservable.add(eventData => {
+        updateByRegionActive()
     })
 
     return human

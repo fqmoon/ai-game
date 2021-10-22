@@ -2,15 +2,10 @@ import * as BABYLON from "babylonjs";
 import {createSceneObjs} from "./sceneObjs";
 import {Human} from "./human";
 import {Region} from "./region";
-import {PointerOnGroundEvent} from "./ground";
 import {createCamera} from "./camera";
 import {createGUI} from "./gui";
 import {createRules} from "./rule";
 import {createBoatGoAnimation} from "./animations";
-
-export type GameMsgData =
-    PointerOnGroundEvent
-export type GameMsg = BABYLON.Observable<GameMsgData>
 
 export type GameStatus = "continue" | "failed" | "pass"
 
@@ -23,6 +18,7 @@ export type HumanDrag = {
     readonly reachedRegion?: Region,
     readonly human?: Human,
     readonly lastHuman?: Human,
+    readonly pointerPosOnGround?: BABYLON.Vector3
     onBeforeDraggingHumanChangeObservable: BABYLON.Observable<Human | undefined>
     onAfterDraggingHumanChangeObservable: BABYLON.Observable<Human | undefined>
     onDraggingPointerMoveObservable: BABYLON.Observable<{
@@ -47,7 +43,6 @@ export interface Game {
     readonly nextBank: Region
     // 分别对应游戏继续、失败、过关
     status: GameStatus
-    msg: BABYLON.Observable<GameMsgData>
     animations: {
         boatGo: {
             play(): Promise<void>
@@ -77,9 +72,6 @@ export function createGame() {
         engine.resize();
     });
 
-    // 全局事件处理
-    let msg = new BABYLON.Observable() as GameMsg
-
     function createHumanDrag(): HumanDrag {
         let _lastHuman: Human | undefined
         let _human: Human | undefined
@@ -101,6 +93,9 @@ export function createGame() {
             },
             get activeRegions() {
                 return new Set([game.boat, game.curBank])
+            },
+            get pointerPosOnGround() {
+                return ground.getGroundPosition()
             },
             onBeforeDraggingHumanChangeObservable: new BABYLON.Observable(),
             onAfterDraggingHumanChangeObservable: new BABYLON.Observable(),
@@ -197,7 +192,6 @@ export function createGame() {
     let _status = "continue" as GameStatus
     // @ts-ignore
     let game: Game = {
-        msg,
         humanDrag: createHumanDrag(),
         getDstRegion() {
             for (const region of this.humanDrag.activeRegions) {
