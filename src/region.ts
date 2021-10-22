@@ -2,20 +2,15 @@ import * as BABYLON from "babylonjs"
 import {createSlotManager, SlotManager} from "./slot";
 import {
     Human,
-    HumanDragBeforeEndEventType,
-    HumanDragMoveEventType,
-    HumanDragStartEventType,
     HumanIdentity
 } from "./human";
-import {GameEvents, GameStatus} from "./game";
+import {Game} from "./game";
 
 /**
  * 主导用户交互，包括以颜色提示放置区域
  */
-export function createRegion({scene, position, width, height, gameStatus, gameEvents}: {
-    scene: BABYLON.Scene, position: BABYLON.Vector3, width: number, height: number,
-    gameEvents: GameEvents,
-    gameStatus: GameStatus,
+export function createRegion({scene, position, width, height, game}: {
+    scene: BABYLON.Scene, position: BABYLON.Vector3, width: number, height: number, game: Game,
 }) {
     let mesh = BABYLON.MeshBuilder.CreatePlane("region", {
         width,
@@ -43,36 +38,54 @@ export function createRegion({scene, position, width, height, gameStatus, gameEv
         }),
     }
 
-    function isPick() {
-        let res = scene.pick(scene.pointerX, scene.pointerY, m => m === mesh)
-        return res?.hit
+    function isRegionActive() {
+        return game.humanDrag.activeRegions.has(region)
     }
 
-    // 在拖拽时更新选中的region信息
-    gameEvents.add(((eventData, eventState) => {
-        let dragInfo = gameStatus.humanDrag
-        if (!dragInfo.targetRegions.has(region)) {
+    game.humanDrag.onAfterDraggingStatusChangeObservable.add(status => {
+        if (!isRegionActive())
             return
-        }
 
-        if (eventData.type === HumanDragStartEventType || eventData.type === HumanDragMoveEventType) {
-            if (isPick()) {
+        if (status === 'draggingStart') {
+            if (game.humanDrag.reachedRegion === region) {
                 region.setColorByDrag("reach")
             } else {
                 region.setColorByDrag("notReach")
             }
-        } else if (eventData.type === HumanDragBeforeEndEventType) {
-            if (isPick()) {
-                // 更新选中的region
-                dragInfo.reachedRegion = region
-            }
+        } else if (status === 'draggingEnd') {
             region.setColorByDrag("noDrag")
         }
-    }))
+    })
+
+    game.humanDrag.onDraggingPointerMoveObservable.add(eventData => {
+        if (!isRegionActive())
+            return
+
+        if (game.humanDrag.reachedRegion === region) {
+            region.setColorByDrag("reach")
+        } else {
+            region.setColorByDrag("notReach")
+        }
+    })
+
+    let _humans = new Set<Human>()
+
+    function getHumanCount() {
+        return _humans.size
+    }
 
     let region = {
         mesh,
         slotManagers,
+        get humanCount() {
+            return getHumanCount()
+        },
+        hasHuman(human: Human) {
+            return _humans.has(human)
+        },
+        get humans() {
+            return _humans
+        },
         putHuman(human: Human) {
             if (human.region === region)
                 return false
@@ -91,6 +104,8 @@ export function createRegion({scene, position, width, height, gameStatus, gameEv
                 human.slotManager = newSlotManager
                 human.slotPos = res.slotPos
                 human.region = region
+                _humans.add(human)
+                this.onAfterHumanCountChangeObservable.notifyObservers(getHumanCount())
             }
             return !!res
         },
@@ -108,18 +123,14 @@ export function createRegion({scene, position, width, height, gameStatus, gameEv
             human.slotManager = undefined
             human.slotPos = undefined
             human.region = undefined
+            _humans.delete(human)
+            this.onAfterHumanCountChangeObservable.notifyObservers(getHumanCount())
         },
         resetHumanPos(human: Human) {
             if (human.region !== region || !human.slotManager || !human.slotPos)
                 return false
 
             human.setPosByPlanePos(human.slotManager.slotPosToPlanePos(human.slotPos))
-        },
-        putHumanByDrag(human: Human) {
-            if (isPick()) {
-                return this.putHuman(human)
-            }
-            return false
         },
         setColorByDrag(status: "reach" | "notReach" | "noDrag") {
             if (status === "noDrag") {
@@ -130,6 +141,7 @@ export function createRegion({scene, position, width, height, gameStatus, gameEv
                 material.diffuseColor.copyFrom(promoteColor)
             }
         },
+        onAfterHumanCountChangeObservable: new BABYLON.Observable<number>(),
     }
     return region
 }

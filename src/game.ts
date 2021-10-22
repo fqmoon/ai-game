@@ -1,152 +1,264 @@
 import * as BABYLON from "babylonjs";
 import {createSceneObjs} from "./sceneObjs";
-import {Human, HumanDragAfterEndEvent, HumanDragBeforeEndEvent, HumanDragMoveEvent, HumanDragStartEvent} from "./human";
+import {Human} from "./human";
 import {Region} from "./region";
-import {PointerOnGroundEvent} from "./ground";
 import {createCamera} from "./camera";
-import {
-    BoatLeaveButtonClickEvent,
-    BoatLeaveButtonClickEventType,
-    createGUI,
-    RestartEvent,
-} from "./gui";
-import {AfterHumanArriveBank, BeforeHumanArriveBank, createRules, GameOver, GamePass} from "./rule";
+import {createGUI} from "./gui";
+import {createRules} from "./rule";
+import {createBoatGoAnimation} from "./animations";
 
-export type GameEventData =
-    PointerOnGroundEvent
-    | HumanDragStartEvent
-    | HumanDragBeforeEndEvent
-    | HumanDragMoveEvent
-    | HumanDragAfterEndEvent
-    | BoatLeaveButtonClickEvent
-    | BoatLeaveReady
-    | BeforeHumanArriveBank
-    | AfterHumanArriveBank
-    | GameOver
-    | GamePass
-    | RestartEvent
-export type GameEvents = BABYLON.Observable<GameEventData>
+export type GameStatus = "continue" | "failed" | "pass"
 
-export const BoatLeaveReadyType = "BoatLeaveReady"
-
-export interface BoatLeaveReady {
-    type: typeof BoatLeaveReadyType
+// human拖拽状态信息
+export type HumanDrag = {
+    active: boolean
+    readonly dragging: boolean
+    // 对拖动激活的regions。注意对它的值是临时的，对其修改是无效的
+    readonly activeRegions: Set<Region>,
+    readonly reachedRegion?: Region,
+    readonly human?: Human,
+    readonly lastHuman?: Human,
+    readonly pointerPosOnGround?: BABYLON.Vector3
+    onBeforeDraggingHumanChangeObservable: BABYLON.Observable<Human | undefined>
+    onAfterDraggingHumanChangeObservable: BABYLON.Observable<Human | undefined>
+    onDraggingPointerMoveObservable: BABYLON.Observable<{
+        human: Human,
+        pointerInfo: BABYLON.PointerInfo
+    }>
+    onBeforeReachedRegionChangeObservable: BABYLON.Observable<'draggingStart' | 'draggingEnd'>
+    onAfterDraggingStatusChangeObservable: BABYLON.Observable<'draggingStart' | 'draggingEnd'>
+    onBeforeDraggingStatusChangeObservable: BABYLON.Observable<'draggingStart' | 'draggingEnd'>
+    onAfterReachedRegionChangeObservable: BABYLON.Observable<Region | undefined>
 }
 
-export interface GameStatus {
-    // human拖拽状态信息
-    humanDrag: {
-        active: boolean
-        // 拖动起始地。在拖动失败后要将human放回它
-        targetRegions: Set<Region>,
-        reachedRegion?: Region,
-    } & ({
-        dragging: true,
-        human: Human,
-    } | {
-        dragging: false,
-        human: undefined,
-    })
+export interface ValueChange<T> {
+    from: T
+    to: T
+}
 
-    boat: Region
+export interface Game {
+    humanDrag: HumanDrag
+    readonly boat: Region
+    readonly curBank: Region
+    readonly nextBank: Region
+    // 分别对应游戏继续、失败、过关
+    status: GameStatus
+    animations: {
+        boatGo: {
+            play(): Promise<void>
+        }
+    }
+    onBeforeBankChangeObservable: BABYLON.Observable<void>
+    onAfterBankChangeObservable: BABYLON.Observable<void>
+    onBeforeBoatGoObservable: BABYLON.Observable<void>
+    onAfterBoatGoObservable: BABYLON.Observable<void>
+    onBeforeStatusChangeObservable: BABYLON.Observable<ValueChange<GameStatus>>
+    onAfterStatusChangeObservable: BABYLON.Observable<ValueChange<GameStatus>>
 
     getDstRegion(): Region
 
-    // 分别对应游戏继续、失败、过关
-    status: "continue" | "over" | "pass"
-
-    onNextRegionChangedObservable: BABYLON.Observable<void>
-    onStatusChangedObservable: BABYLON.Observable<void>
-
-    changeNextRegion(): void
+    // 开船
+    boatGo(): void
 
     restart(): void
 }
 
 export function createGame() {
-    // 全局事件处理
-    let gameEvents = new BABYLON.Observable() as GameEvents
-
-    let _status = "continue"
-    // @ts-ignore
-    let gameStatus: GameStatus = {
-        // @ts-ignore
-        humanDrag: {
-            active: true,
-            dragging: false,
-            human: undefined,
-            reachedRegion: undefined,
-            targetRegions: new Set(),
-        },
-        getDstRegion() {
-            for (const region of this.humanDrag.targetRegions) {
-                if (region !== this.boat)
-                    return region
-            }
-            throw Error("find dst region failed")
-        },
-        // @ts-ignore
-        get status() {
-            return _status
-        },
-        // @ts-ignore
-        set status(v) {
-            if (_status !== v) {
-                _status = v
-                this.onStatusChangedObservable.notifyObservers()
-            }
-        },
-        onNextRegionChangedObservable: new BABYLON.Observable(),
-        onStatusChangedObservable: new BABYLON.Observable(),
-        changeNextRegion() {
-            let lastRegion, nextRegion
-            if (gameStatus.humanDrag.targetRegions.has(regions.leftBank)) {
-                lastRegion = regions.leftBank
-                nextRegion = regions.rightBank
-                gameStatus.humanDrag.targetRegions.delete(regions.leftBank)
-                gameStatus.humanDrag.targetRegions.add(regions.rightBank)
-            } else if (gameStatus.humanDrag.targetRegions.has(regions.rightBank)) {
-                lastRegion = regions.rightBank
-                nextRegion = regions.leftBank
-                gameStatus.humanDrag.targetRegions.delete(regions.rightBank)
-                gameStatus.humanDrag.targetRegions.add(regions.leftBank)
-            } else {
-                throw Error("change region failed")
-            }
-
-            this.onNextRegionChangedObservable.notifyObservers()
-        },
-        restart() {
-            for (const human of sceneObjs.humans) {
-                regions.leftBank.putHuman(human)
-            }
-            let dragInfo = gameStatus.humanDrag
-            dragInfo.targetRegions.clear()
-            dragInfo.targetRegions.add(regions.leftBank)
-            dragInfo.targetRegions.add(regions.boat)
-            gameStatus.onNextRegionChangedObservable.notifyObservers()
-            gameStatus.status = "continue"
-        },
-    }
-
     let canvas = document.getElementById("game") as HTMLCanvasElement
     let engine = new BABYLON.Engine(canvas)
+    let scene = new BABYLON.Scene(engine)
     // Resize
     window.addEventListener("resize", function () {
         engine.resize();
     });
 
-    let scene = new BABYLON.Scene(engine)
-    let camera = createCamera({scene, canvas, gameStatus, gameEvents})
-    let sceneObjs = createSceneObjs({scene, gameStatus, gameEvents})
+    function createHumanDrag(): HumanDrag {
+        let _lastHuman: Human | undefined
+        let _human: Human | undefined
+        let _touchedRegion: Region | undefined
+
+        let humanDrag = {
+            active: true,
+            get dragging() {
+                return !!this.human
+            },
+            get lastHuman() {
+                return _lastHuman
+            },
+            get human() {
+                return getHuman()
+            },
+            get reachedRegion() {
+                return getTouchedRegion()
+            },
+            get activeRegions() {
+                return new Set([game.boat, game.curBank])
+            },
+            get pointerPosOnGround() {
+                return ground.getGroundPosition()
+            },
+            onBeforeDraggingHumanChangeObservable: new BABYLON.Observable(),
+            onAfterDraggingHumanChangeObservable: new BABYLON.Observable(),
+            onDraggingPointerMoveObservable: new BABYLON.Observable(),
+            onAfterDraggingStatusChangeObservable: new BABYLON.Observable(),
+            onBeforeDraggingStatusChangeObservable: new BABYLON.Observable(),
+            onBeforeReachedRegionChangeObservable: new BABYLON.Observable(),
+            onAfterReachedRegionChangeObservable: new BABYLON.Observable(),
+        } as HumanDrag
+
+        function getHuman() {
+            return _human
+        }
+
+        function setHuman(v: Human | undefined) {
+            if (v !== _human) {
+                _lastHuman = _human
+                _human = v
+                humanDrag.onAfterDraggingHumanChangeObservable.notifyObservers(_human)
+            }
+        }
+
+        function getTouchedRegion() {
+            return _touchedRegion
+        }
+
+        function setTouchedRegion(v?: Region) {
+            if (_touchedRegion !== v) {
+                _touchedRegion = v
+                humanDrag.onAfterReachedRegionChangeObservable.notifyObservers(_touchedRegion)
+            }
+        }
+
+        function pickOneRegion() {
+            for (const region of humanDrag.activeRegions) {
+                let res = scene.pick(scene.pointerX, scene.pointerY, mesh => mesh === region.mesh)
+                if (res?.hit) {
+                    return region
+                }
+            }
+        }
+
+        scene.onPointerObservable.add((pointerInfo, eventState) => {
+            if (!humanDrag.active)
+                return
+
+            if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOWN) {
+                if (pointerInfo.pickInfo?.hit &&
+                    pointerInfo.pickInfo.pickedMesh) {
+
+                    let pickedMesh = pointerInfo.pickInfo.pickedMesh
+                    if (pickedMesh.metadata?.gameObjType === "Human") { // 判定为human
+                        let human = pickedMesh.metadata.gameObj as Human
+                        if (!human)
+                            throw Error("has human info but not has human")
+
+                        if (!human.region || !humanDrag.activeRegions.has(human.region))
+                            return
+
+                        humanDrag.onBeforeDraggingStatusChangeObservable.notifyObservers('draggingStart')
+                        setHuman(human)
+                        setTouchedRegion(pickOneRegion())
+                        humanDrag.onAfterDraggingStatusChangeObservable.notifyObservers('draggingStart')
+                    }
+                }
+            } else if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERUP) {
+                if (humanDrag.human) {
+                    humanDrag.onBeforeDraggingStatusChangeObservable.notifyObservers('draggingEnd')
+                    setHuman(undefined)
+                    setTouchedRegion(undefined)
+                    humanDrag.onAfterDraggingStatusChangeObservable.notifyObservers('draggingEnd')
+                }
+            } else if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERMOVE) {
+                if (humanDrag.human) {
+                    humanDrag.onDraggingPointerMoveObservable.notifyObservers({
+                        human: humanDrag.human,
+                        pointerInfo,
+                    })
+                    setTouchedRegion(pickOneRegion())
+                }
+            }
+        })
+
+        return humanDrag
+    }
+
+    function _changeBank(cur: Region, next: Region) {
+        game.onBeforeBankChangeObservable.notifyObservers()
+        _curBank = cur
+        _nextBank = next
+        game.onAfterBankChangeObservable.notifyObservers()
+    }
+
+    let _status = "continue" as GameStatus
+    // @ts-ignore
+    let game: Game = {
+        humanDrag: createHumanDrag(),
+        getDstRegion() {
+            for (const region of this.humanDrag.activeRegions) {
+                if (region !== this.boat)
+                    return region
+            }
+            throw Error("find dst region failed")
+        },
+        get status() {
+            return _status
+        },
+        set status(v) {
+            if (_status !== v) {
+                let from = _status
+                let to = v
+
+                this.onBeforeStatusChangeObservable.notifyObservers({from, to})
+                _status = v
+                this.onAfterStatusChangeObservable.notifyObservers({from, to})
+            }
+        },
+        onBeforeBankChangeObservable: new BABYLON.Observable(),
+        onAfterBankChangeObservable: new BABYLON.Observable(),
+        onBeforeStatusChangeObservable: new BABYLON.Observable(),
+        onAfterStatusChangeObservable: new BABYLON.Observable(),
+        onBeforeBoatGoObservable: new BABYLON.Observable(),
+        onAfterBoatGoObservable: new BABYLON.Observable(),
+        async boatGo() {
+            _changeBank(this.nextBank, this.curBank)
+            if (this.status === 'continue') {
+                this.onBeforeBoatGoObservable.notifyObservers()
+                await this.animations.boatGo.play()
+                this.onAfterBoatGoObservable.notifyObservers()
+            }
+        },
+        restart() {
+            // 重置human
+            for (const human of sceneObjs.humans) {
+                sceneObjs.regions.leftBank.putHuman(human)
+            }
+            // 重置bank
+            _changeBank(sceneObjs.regions.leftBank, sceneObjs.regions.rightBank)
+            game.status = "continue"
+        },
+        get boat() {
+            return _boat
+        },
+        get curBank() {
+            return _curBank
+        },
+        get nextBank() {
+            return _nextBank
+        }
+    }
+
+    let camera = createCamera({scene, canvas, game: game,})
+    let sceneObjs = createSceneObjs({scene, game: game,})
+    let _boat = sceneObjs.regions.boat
+    let _curBank = sceneObjs.regions.leftBank
+    let _nextBank = sceneObjs.regions.rightBank
     let gui = createGUI({
-        gameStatus, gameEvents,
+        game: game,
         boat: sceneObjs.regions.boat,
         humans: sceneObjs.humans
     })
-    gameStatus.boat = sceneObjs.regions.boat
     let rules = createRules({
-        gameStatus, gameEvents, boat: sceneObjs.regions.boat, humans: sceneObjs.humans, scene,
+        game: game, humans: sceneObjs.humans,
         leftBank: sceneObjs.regions.leftBank,
         rightBank: sceneObjs.regions.rightBank,
     })
@@ -154,37 +266,21 @@ export function createGame() {
     let ground = sceneObjs.ground
     let regions = sceneObjs.regions
 
-    // 初始化
-    {
-        gameStatus.restart()
+    game.animations = {
+        boatGo: createBoatGoAnimation({game, scene, boat: regions.boat})
+    }
 
-        // 响应开船事件，切换region
-        gameEvents.add((eventData, eventState) => {
-            if (eventData.type === BoatLeaveButtonClickEventType) {
-                gameStatus.changeNextRegion()
-                gameEvents.notifyObservers({
-                    type: BoatLeaveReadyType,
-                })
+    game.restart()
+
+    function start() {
+        engine.runRenderLoop(function () {
+            if (scene && scene.activeCamera) {
+                scene.render();
             }
-        })
+        });
     }
 
-    return {
-        events: gameEvents,
-        status: gameStatus,
-        engine,
-        canvas,
-        scene,
-        sceneObjs,
-        camera,
-        start: () => {
-            engine.runRenderLoop(function () {
-                if (scene && scene.activeCamera) {
-                    scene.render();
-                }
-            });
-        },
-    }
+    start()
+
+    return game
 }
-
-export type Game = ReturnType<typeof createGame>

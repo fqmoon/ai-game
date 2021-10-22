@@ -1,10 +1,8 @@
 import * as BABYLON from "babylonjs";
-import {GameEvents, GameStatus} from "./game";
-import {HumanDragBeforeEndEventType, HumanDragStartEventType} from "./human";
+import {Game} from "./game";
 
-export function createCamera({scene, canvas, gameStatus, gameEvents}: {
-    scene: BABYLON.Scene, canvas: HTMLElement,
-    gameEvents: GameEvents, gameStatus: GameStatus,
+export function createCamera({scene, canvas, game}: {
+    scene: BABYLON.Scene, canvas: HTMLElement, game: Game,
 }) {
     const camera = new BABYLON.ArcRotateCamera(
         "camera", -Math.PI / 2, Math.PI / 2.5, 50, new BABYLON.Vector3(0, 0, 0),
@@ -12,12 +10,11 @@ export function createCamera({scene, canvas, gameStatus, gameEvents}: {
     camera.attachControl(canvas, true);
 
     // 在拖拽时禁止相机旋转
-    gameEvents.add((eventData, eventState) => {
-        if (eventData.type === HumanDragStartEventType) {
+    game.humanDrag.onAfterDraggingStatusChangeObservable.add(status => {
+        if (status === 'draggingStart')
             camera.detachControl()
-        } else if (eventData.type === HumanDragBeforeEndEventType) {
+        else if (status === 'draggingEnd')
             camera.attachControl()
-        }
     })
 
     return camera

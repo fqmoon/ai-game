@@ -136,6 +136,12 @@ export function createSlotManager({leftDownPosition, rightUpPosition, slotSize}:
         arrange,
         toString,
         slotPosToPlanePos: calculatePosition,
+        get size() {
+            return occupy
+        },
+        get capacity() {
+            return capacity
+        },
     }
 }
 
