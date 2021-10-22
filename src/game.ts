@@ -6,6 +6,7 @@ import {PointerOnGroundEvent} from "./ground";
 import {createCamera} from "./camera";
 import {createGUI} from "./gui";
 import {createRules} from "./rule";
+import {createBoatGoAnimation} from "./animations";
 
 export type GameMsgData =
     PointerOnGroundEvent
@@ -45,6 +46,12 @@ export interface Game {
     // 分别对应游戏继续、失败、过关
     status: GameStatus
     msg: BABYLON.Observable<GameMsgData>
+    animations: {
+        boatGo: {
+            play(): Promise<void>
+        }
+    }
+    onBeforeNextRegionChangeObservable: BABYLON.Observable<void>
     onAfterNextRegionChangeObservable: BABYLON.Observable<void>
     onBeforeStatusChangeObservable: BABYLON.Observable<ValueChange<GameStatus>>
     onAfterStatusChangeObservable: BABYLON.Observable<ValueChange<GameStatus>>
@@ -232,7 +239,6 @@ export function createGame() {
         },
     }
 
-
     let camera = createCamera({scene, canvas, game: game,})
     let sceneObjs = createSceneObjs({scene, game: game,})
     game.boat = sceneObjs.regions.boat
@@ -249,6 +255,10 @@ export function createGame() {
 
     let ground = sceneObjs.ground
     let regions = sceneObjs.regions
+
+    game.animations = {
+        boatGo: createBoatGoAnimation({game, scene, boat: regions.boat})
+    }
 
     game.restart()
 

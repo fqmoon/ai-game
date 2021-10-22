@@ -4,7 +4,7 @@ import {Region} from "./region";
 import {Game} from "./game";
 
 // 开船动画
-export function createBoatLeaveAnimation({game, scene, boat}: {
+export function createBoatGoAnimation({game, scene, boat}: {
     game: Game, scene: BABYLON.Scene, boat: Region,
 }) {
     let frameSpeed = 60
@@ -85,4 +85,4 @@ export function createBoatLeaveAnimation({game, scene, boat}: {
     }
 }
 
-export type BoatLeaveAnimation = ReturnType<typeof createBoatLeaveAnimation>
+export type BoatLeaveAnimation = ReturnType<typeof createBoatGoAnimation>

@@ -2,7 +2,6 @@ import {Game} from "./game";
 import {Region} from "./region";
 import {Human} from "./human";
 import * as BABYLON from "babylonjs";
-import {createBoatLeaveAnimation} from "./animations";
 
 function getMissionaries(humans: Iterable<Human>) {
     let rt = []
@@ -67,14 +66,12 @@ export function createRules({game, scene, boat, humans, leftBank, rightBank}: {
         checkRightRegion(rightBank, humans, game)
     }
 
-    let boatLeaveAnimation = createBoatLeaveAnimation({scene, game, boat})
-
     game.onAfterNextRegionChangeObservable.add(async () => {
         checkBanks()
 
         if (game.status === "continue") {
             // TODO 不应该由rule管理。应该是game主动操作的
-            await boatLeaveAnimation.play()
+            await game.animations.boatGo.play()
             checkBanks()
         }
     })
