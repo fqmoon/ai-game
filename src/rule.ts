@@ -27,7 +27,9 @@ function checkLeftRegion(region: Region, humans: Iterable<Human>, game: Game) {
     let cannibals = getCannibals(toCheckHumans)
     if (cannibals.length > missionaries.length && missionaries.length > 0) {
         game.status = "failed"
+        return false
     }
+    return true
 }
 
 function checkRightRegion(region: Region, humans: Iterable<Human>, game: Game) {
@@ -42,9 +44,12 @@ function checkRightRegion(region: Region, humans: Iterable<Human>, game: Game) {
 
     if (cannibals.length > missionaries.length && missionaries.length > 0) {
         game.status = "failed"
+        return false
     } else if (toCheckHumans.length === humanCount) {
         game.status = "pass"
+        return false
     }
+    return true
 }
 
 function getRegionHumans(region: Region, humans: Iterable<Human>) {
@@ -57,22 +62,18 @@ function getRegionHumans(region: Region, humans: Iterable<Human>) {
     return bankHumans
 }
 
-export function createRules({game, scene, boat, humans, leftBank, rightBank}: {
-    game: Game, scene: BABYLON.Scene, boat: Region, humans: Iterable<Human>,
+export function createRules({game, humans, leftBank, rightBank}: {
+    game: Game, humans: Iterable<Human>,
     leftBank: Region, rightBank: Region,
 }) {
     function checkBanks() {
-        checkLeftRegion(leftBank, humans, game)
-        checkRightRegion(rightBank, humans, game)
+        checkLeftRegion(leftBank, humans, game) && checkRightRegion(rightBank, humans, game)
     }
 
-    game.onAfterBankChangeObservable.add(async () => {
+    game.onAfterBankChangeObservable.add(() => {
         checkBanks()
-
-        if (game.status === "continue") {
-            // TODO 不应该由rule管理。应该是game主动操作的
-            await game.animations.boatGo.play()
-            checkBanks()
-        }
+    })
+    game.onAfterBoatGoObservable.add(() => {
+        checkBanks()
     })
 }

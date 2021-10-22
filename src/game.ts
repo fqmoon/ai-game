@@ -55,12 +55,15 @@ export interface Game {
     }
     onBeforeBankChangeObservable: BABYLON.Observable<void>
     onAfterBankChangeObservable: BABYLON.Observable<void>
+    onBeforeBoatGoObservable: BABYLON.Observable<void>
+    onAfterBoatGoObservable: BABYLON.Observable<void>
     onBeforeStatusChangeObservable: BABYLON.Observable<ValueChange<GameStatus>>
     onAfterStatusChangeObservable: BABYLON.Observable<ValueChange<GameStatus>>
 
     getDstRegion(): Region
 
-    changeBank(): void
+    // 开船
+    boatGo(): void
 
     restart(): void
 }
@@ -184,6 +187,13 @@ export function createGame() {
         return humanDrag
     }
 
+    function _changeBank(cur: Region, next: Region) {
+        game.onBeforeBankChangeObservable.notifyObservers()
+        _curBank = cur
+        _nextBank = next
+        game.onAfterBankChangeObservable.notifyObservers()
+    }
+
     let _status = "continue" as GameStatus
     // @ts-ignore
     let game: Game = {
@@ -213,27 +223,23 @@ export function createGame() {
         onAfterBankChangeObservable: new BABYLON.Observable(),
         onBeforeStatusChangeObservable: new BABYLON.Observable(),
         onAfterStatusChangeObservable: new BABYLON.Observable(),
-        changeBank() {
-            this.onBeforeBankChangeObservable.notifyObservers()
-            let tmp = _curBank
-            _curBank = _nextBank
-            _nextBank = tmp
-            this.onAfterBankChangeObservable.notifyObservers()
+        onBeforeBoatGoObservable: new BABYLON.Observable(),
+        onAfterBoatGoObservable: new BABYLON.Observable(),
+        async boatGo() {
+            _changeBank(this.nextBank, this.curBank)
+            if (this.status === 'continue') {
+                this.onBeforeBoatGoObservable.notifyObservers()
+                await this.animations.boatGo.play()
+                this.onAfterBoatGoObservable.notifyObservers()
+            }
         },
         restart() {
             // 重置human
-            {
-                for (const human of sceneObjs.humans) {
-                    sceneObjs.regions.leftBank.putHuman(human)
-                }
+            for (const human of sceneObjs.humans) {
+                sceneObjs.regions.leftBank.putHuman(human)
             }
             // 重置bank
-            {
-                this.onBeforeBankChangeObservable.notifyObservers()
-                _curBank = sceneObjs.regions.leftBank
-                _nextBank = sceneObjs.regions.rightBank
-                this.onAfterBankChangeObservable.notifyObservers()
-            }
+            _changeBank(sceneObjs.regions.leftBank, sceneObjs.regions.rightBank)
             game.status = "continue"
         },
         get boat() {
@@ -258,7 +264,7 @@ export function createGame() {
         humans: sceneObjs.humans
     })
     let rules = createRules({
-        game: game, boat: sceneObjs.regions.boat, humans: sceneObjs.humans, scene,
+        game: game, humans: sceneObjs.humans,
         leftBank: sceneObjs.regions.leftBank,
         rightBank: sceneObjs.regions.rightBank,
     })
