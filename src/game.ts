@@ -282,5 +282,10 @@ export async function createGame() {
 
     start()
 
+    // 加载环境光，对PBR材质生效
+    let hdrTexture = new BABYLON.CubeTexture("SpecularHDR.dds", scene);
+    // TODO 不够亮
+    scene.createDefaultSkybox(hdrTexture, true, 10000);
+
     return game
 }

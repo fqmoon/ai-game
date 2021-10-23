@@ -38,19 +38,18 @@ export async function createHuman({scene, position, identity, game}: {
     material.diffuseColor.copyFrom(activeColor)
 
     async function loadMesh() {
-        let res = await BABYLON.SceneLoader.ImportMeshAsync("", "", identity + ".glb", scene,)
-        return res
+        return BABYLON.SceneLoader.ImportMeshAsync("", "", identity + ".glb", scene,)
     }
 
-    let res = await loadMesh()
-    let mesh = res.meshes[0]
+    let meshes = (await loadMesh()).meshes
+    let mesh = meshes[0]
 
     let human = {
         mesh,
         identity,
         // 离地面高度
         yOff: 0,
-        dragYOff: 3,
+        dragYOff: 1,
         slotManager: undefined,
         slotPos: undefined,
         // TODO 更名为private或直接删掉
@@ -65,7 +64,7 @@ export async function createHuman({scene, position, identity, game}: {
             mesh.position.z = planePos.y
         },
     } as Human
-    for (let mesh of res.meshes) {
+    for (let mesh of meshes) {
         if (!mesh.metadata)
             mesh.metadata = {}
         mesh.metadata.gameObj = human

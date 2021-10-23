@@ -16,6 +16,7 @@ export function createRegion({scene, position, width, height, game}: {
         width,
         height,
     }, scene)
+    mesh.receiveShadows = true
     mesh.position = position
     let material = new BABYLON.StandardMaterial("", scene)
     mesh.material = material

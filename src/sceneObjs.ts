@@ -9,28 +9,10 @@ export async function createSceneObjs({scene, game}: {
     scene: BABYLON.Scene, game: Game,
 }) {
     function createSkyLight() {
-        const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
-        return light
+        return new BABYLON.DirectionalLight("light", new BABYLON.Vector3(0.2, -1, 1), scene);
     }
 
-    function createPointLight() {
-        let light = new BABYLON.PointLight("pl", new BABYLON.Vector3(2, 3, 4), scene)
-        light.intensity = 0.5;
-        var lightSphere = BABYLON.Mesh.CreateSphere("sphere", 10, 1, scene);
-        lightSphere.position = light.position;
-        lightSphere.material = new BABYLON.StandardMaterial("light", scene)
-        // @ts-ignore
-        lightSphere.material.emissiveColor = new BABYLON.Color3(1, 1, 0);
-        return {light, lightSphere}
-    }
-
-    function castShadow(light: BABYLON.IShadowLight, obj: BABYLON.AbstractMesh) {
-        let shadowGen = new BABYLON.ShadowGenerator(1024, light)
-        shadowGen.addShadowCaster(obj);
-        shadowGen.usePoissonSampling = true;
-        return shadowGen
-    }
-
+    // 天光对非PBR起效
     let skyLight = createSkyLight()
     let ground = createGround({scene, game: game,})
 
@@ -50,36 +32,36 @@ export async function createSceneObjs({scene, game}: {
         }))
     }
 
-    let {light: pointLight, lightSphere: pointLightSphere} = createPointLight()
-    let shadowGenerator = new BABYLON.ShadowGenerator(1024, pointLight)
-    shadowGenerator.usePoissonSampling = true;
-
-    for (const human of humans) {
-        shadowGenerator.addShadowCaster(human.mesh)
-    }
-
+    let bankW = 5, bankH = 10
+    let boatW = 2, boatH = 3
     let regions = {
         leftBank: createRegion({
             scene,
-            position: new BABYLON.Vector3(-30, 0.01, 0),
-            width: 20,
-            height: 40,
+            position: new BABYLON.Vector3(-10, 0.01, 0),
+            width: bankW,
+            height: bankH,
             game: game,
         }),
         rightBank: createRegion({
             scene,
-            position: new BABYLON.Vector3(30, 0.01, 0),
-            width: 20,
-            height: 40,
+            position: new BABYLON.Vector3(10, 0.01, 0),
+            width: bankW,
+            height: bankH,
             game: game,
         }),
         boat: createRegion({
             scene,
             position: new BABYLON.Vector3(0, 0.01, 0),
-            width: 20,
-            height: 40,
+            width: boatW,
+            height: boatH,
             game: game,
         }),
+    }
+
+    let shadowGenerator = new BABYLON.ShadowGenerator(1024, skyLight)
+    shadowGenerator.usePoissonSampling = true;
+    for (const human of humans) {
+        shadowGenerator.addShadowCaster(human.mesh)
     }
 
     return {

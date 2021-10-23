@@ -5,8 +5,8 @@ export function createGround({scene, game}: {
     scene: BABYLON.Scene, game: Game
 }) {
     let mesh = BABYLON.MeshBuilder.CreateGround("ground", {
-        width: 100,
-        height: 100,
+        width: 30,
+        height: 20,
     }, scene)
     let groundMat = new BABYLON.StandardMaterial("gm", scene)
     groundMat.diffuseColor = new BABYLON.Color3(0.5, 0.5, 0.5)

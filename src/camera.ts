@@ -5,7 +5,7 @@ export function createCamera({scene, canvas, game}: {
     scene: BABYLON.Scene, canvas: HTMLElement, game: Game,
 }) {
     const camera = new BABYLON.ArcRotateCamera(
-        "camera", -Math.PI / 2, Math.PI / 2.5, 50, new BABYLON.Vector3(0, 0, 0),
+        "camera", -Math.PI / 2, Math.PI / 3.5, 20, new BABYLON.Vector3(0, 0, 0),
         scene);
     camera.attachControl(canvas, true);
 
