@@ -1,10 +1,11 @@
 import * as BABYLON from "babylonjs";
+import 'babylonjs-loaders';
 import {createHuman, Human} from "./human";
 import {createGround} from "./ground";
 import {createRegion} from "./region";
 import {Game} from "./game";
 
-export function createSceneObjs({scene, game}: {
+export async function createSceneObjs({scene, game}: {
     scene: BABYLON.Scene, game: Game,
 }) {
     function createSkyLight() {
@@ -35,14 +36,14 @@ export function createSceneObjs({scene, game}: {
 
     let humans = new Set<Human>()
     for (let i = 0; i < 3; i++) {
-        humans.add(createHuman({
+        humans.add(await createHuman({
             scene, identity: 'missionary',
             position: new BABYLON.Vector3(0, 0.5, 0),
             game: game,
         }))
     }
     for (let i = 0; i < 3; i++) {
-        humans.add(createHuman({
+        humans.add(await createHuman({
             scene, identity: 'cannibal',
             position: new BABYLON.Vector3(0, 0.5, 0),
             game: game,

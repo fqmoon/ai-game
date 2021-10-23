@@ -63,7 +63,7 @@ export interface Game {
     restart(): void
 }
 
-export function createGame() {
+export async function createGame() {
     let canvas = document.getElementById("game") as HTMLCanvasElement
     let engine = new BABYLON.Engine(canvas)
     let scene = new BABYLON.Scene(engine)
@@ -248,7 +248,7 @@ export function createGame() {
     }
 
     let camera = createCamera({scene, canvas, game: game,})
-    let sceneObjs = createSceneObjs({scene, game: game,})
+    let sceneObjs = await createSceneObjs({scene, game: game,})
     let _boat = sceneObjs.regions.boat
     let _curBank = sceneObjs.regions.leftBank
     let _nextBank = sceneObjs.regions.rightBank

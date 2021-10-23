@@ -26,28 +26,24 @@ export interface Human {
     setPosByPlanePos(planePos: BABYLON.Vector2): void
 }
 
-export function createHuman({scene, position, identity, game}: {
+export async function createHuman({scene, position, identity, game}: {
     scene: BABYLON.Scene, position: BABYLON.Vector3, identity: HumanIdentity, game: Game,
-}): Human {
+}): Promise<Human> {
 
+    // TODO 颜色不生效
     let activeColor = new BABYLON.Color3(1, 0, 0)
     let inactiveColor = new BABYLON.Color3(0.5, 0, 0)
 
     let material = new BABYLON.StandardMaterial("boxMat", scene)
     material.diffuseColor.copyFrom(activeColor)
 
-    function createBox() {
-        const box = BABYLON.MeshBuilder.CreateBox("box", {
-            width: 1,
-            height: 1,
-            depth: 1,
-        });
-        box.position = position
-        box.material = material
-        return box
+    async function loadMesh() {
+        let res = await BABYLON.SceneLoader.ImportMeshAsync("", "", identity + ".glb", scene,)
+        return res
     }
 
-    let mesh = createBox() as HumanMesh
+    let res = await loadMesh()
+    let mesh = res.meshes[0]
 
     let human = {
         mesh,
@@ -69,9 +65,11 @@ export function createHuman({scene, position, identity, game}: {
             mesh.position.z = planePos.y
         },
     } as Human
-    mesh.metadata = {
-        gameObj: human,
-        gameObjType: "Human",
+    for (let mesh of res.meshes) {
+        if (!mesh.metadata)
+            mesh.metadata = {}
+        mesh.metadata.gameObj = human
+        mesh.metadata.gameObjType = "Human"
     }
 
     function putIntoRegion() {
