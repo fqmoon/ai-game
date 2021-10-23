@@ -49,7 +49,7 @@ export async function createHuman({scene, position, identity, game}: {
         mesh,
         identity,
         // 离地面高度
-        yOff: 0.5,
+        yOff: 0,
         dragYOff: 3,
         slotManager: undefined,
         slotPos: undefined,
