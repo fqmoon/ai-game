@@ -14,6 +14,7 @@ export interface HumanMesh extends BABYLON.AbstractMesh {
 
 export interface Human {
     mesh: HumanMesh
+    meshes: HumanMesh[]
     yOff: number
     dragYOff: number
     identity: HumanIdentity
@@ -45,7 +46,9 @@ export async function createHuman({scene, position, identity, game}: {
     let mesh = meshes[0]
 
     let human = {
+        // TODO 删除mesh，用meshes即可
         mesh,
+        meshes,
         identity,
         // 离地面高度
         yOff: 0,

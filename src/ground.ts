@@ -11,7 +11,7 @@ export function createGround({scene, game}: {
     }, scene)
     // 隐藏，因为它只作为拖动计算点位用
     mesh.visibility = 0
-    mesh.receiveShadows = true
+    mesh.receiveShadows = false
 
     // 获取当前鼠标所在的地形位置
     function getPointerPositionOnGround() {

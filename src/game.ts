@@ -287,33 +287,45 @@ export async function createGame() {
     let hdrTexture = new BABYLON.CubeTexture("skybox", scene);
     let skybox = scene.createDefaultSkybox(hdrTexture, true, 10000);
 
-    // 水面
     {
+        // bank model
+        let bankLoadRes = await BABYLON.SceneLoader.ImportMeshAsync("", "", "bank.glb", scene,)
+
+        // waterbottom model
+        let wdRes = await BABYLON.SceneLoader.ImportMeshAsync("", "", "waterbottom.glb", scene,)
+
+        // 水面
         var waterMesh = BABYLON.Mesh.CreateGround("waterMesh", 1000, 1000, 32, scene, false);
-        waterMesh.position.y = -5
+        waterMesh.receiveShadows = true
+        waterMesh.position.y = -0.5
 
         var waterMaterial = new BABYLON_MATERIALS.WaterMaterial("water_material", scene);
         waterMaterial.bumpTexture = new BABYLON.Texture("waterbump.png", scene); // Set the bump texture
         // Water properties
-        waterMaterial.windForce = -15;
-        waterMaterial.waveHeight = 0.1;
+        waterMaterial.windForce = 15;
+        waterMaterial.waveHeight = 0; // TODO 设置为0.1会导致折射不正确，会透过bank渲染出水底，不知道原因
         waterMaterial.windDirection = new BABYLON.Vector2(1, 1);
         waterMaterial.waterColor = new BABYLON.Color3(0.1, 0.1, 0.6);
         waterMaterial.colorBlendFactor = 0.3;
         waterMaterial.bumpHeight = 0.1;
         waterMaterial.waveLength = 0.1;
 
-        // Add skybox and ground to the reflection and refraction
         for (const human of sceneObjs.humans) {
-            waterMaterial.addToRenderList(human.mesh);
+            human.meshes.forEach(mesh => waterMaterial.addToRenderList(mesh))
         }
-        for (const region of Object.values(sceneObjs.regions)) {
-            waterMaterial.addToRenderList(region.mesh);
+        for (const mesh of bankLoadRes.meshes) {
+            waterMaterial.addToRenderList(mesh);
+        }
+        // 无法将上面的语句替换为下面，只加入父节点不能渲染。其中父节点为空节点
+        // waterMaterial.addToRenderList(bankLoadRes.meshes[0]);
+        for (const mesh of wdRes.meshes) {
+            waterMaterial.addToRenderList(mesh);
         }
         waterMaterial.addToRenderList(skybox);
 
         waterMesh.material = waterMaterial;
     }
+
 
     return game
 }
