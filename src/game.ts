@@ -7,6 +7,7 @@ import {createGUI} from "./gui";
 import {createRules} from "./rule";
 import {createBoatGoAnimation} from "./animations";
 import * as BABYLON_MATERIALS from "babylonjs-materials";
+import {StepController} from "./step";
 
 export type GameStatus = "continue" | "failed" | "pass"
 
@@ -269,6 +270,7 @@ export async function createGame() {
         leftBank: sceneObjs.regions.leftBank,
         rightBank: sceneObjs.regions.rightBank,
     })
+    let stepController = new StepController(game)
 
     let ground = sceneObjs.ground
     let regions = sceneObjs.regions
