@@ -299,11 +299,18 @@ export async function createGame() {
         }
     }
 
+    function setShadow(res: BABYLON.ISceneLoaderAsyncResult) {
+        for (const mesh of res.meshes) {
+            sceneObjs.shadowGenerator.addShadowCaster(mesh)
+        }
+    }
+
     {
         // bank model
         let bankLoadRes = await BABYLON.SceneLoader.ImportMeshAsync("", "", "bank.glb", scene,)
         setReceiveShadows(bankLoadRes)
         setRightRotation(bankLoadRes)
+        setShadow(bankLoadRes)
 
         // waterbottom model
         let wdRes = await BABYLON.SceneLoader.ImportMeshAsync("", "", "waterbottom.glb", scene,)

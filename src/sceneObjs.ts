@@ -11,7 +11,9 @@ export async function createSceneObjs({scene, game}: {
 }) {
     function createSkyLight() {
         // 线性光是有范围的，这里乘100
-        return new BABYLON.DirectionalLight("light", new BABYLON.Vector3(0.2, -1, 1).scale(100), scene);
+        let light = new BABYLON.DirectionalLight("light", new BABYLON.Vector3(-1, -1, 1).scale(100), scene);
+        light.intensity = 5
+        return light
     }
 
     // 天光对非PBR起效
@@ -67,10 +69,10 @@ export async function createSceneObjs({scene, game}: {
         }),
     }
 
-    let shadowGenerator = new BABYLON.ShadowGenerator(1024, skyLight)
+    let shadowGenerator = new BABYLON.ShadowGenerator(2048, skyLight)
     shadowGenerator.usePoissonSampling = true;
     for (const human of humans) {
-        shadowGenerator.addShadowCaster(human.mesh)
+        human.meshes.forEach(mesh => shadowGenerator.addShadowCaster(mesh))
     }
 
     return {

@@ -5,12 +5,12 @@ export function createCamera({scene, canvas, game}: {
     scene: BABYLON.Scene, canvas: HTMLElement, game: Game,
 }) {
     const camera = new BABYLON.ArcRotateCamera(
-        "camera", -Math.PI * 0.5, Math.PI / 3.5, 20, new BABYLON.Vector3(0, 0, -3),
+        "camera", -Math.PI * 0.5, Math.PI / 3.5, 15, new BABYLON.Vector3(0, 0, -3),
         scene);
 
     // 仅在调试场景时附加相机控制
     // @ts-ignore
-    if (window.debugScene) {
+    if (!window.debugScene) {
         camera.attachControl(canvas, true);
 
         // 在拖拽时禁止相机旋转

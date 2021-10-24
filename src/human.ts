@@ -43,6 +43,7 @@ export async function createHuman({scene, position, identity, game}: {
     }
 
     let meshes = (await loadMesh()).meshes
+    // TODO 对cannibal的叉子无效？但对台阶有效。所以目前的这个模型是反着的
     meshes.forEach(mesh => mesh.rotation.y = Math.PI)
     let mesh = meshes[0]
 
