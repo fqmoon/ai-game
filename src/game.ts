@@ -5,7 +5,7 @@ import {Region} from "./region";
 import {createCamera} from "./camera";
 import {createGUI} from "./gui";
 import {createRules} from "./rule";
-import {createBoatGoAnimation} from "./animations";
+import {createBoatGoAnimation, GameAnimation} from "./animations";
 import * as BABYLON_MATERIALS from "babylonjs-materials";
 import {StepController} from "./step";
 
@@ -47,9 +47,7 @@ export interface Game {
     // 分别对应游戏继续、失败、过关
     status: GameStatus
     animations: {
-        boatGo: {
-            play(): Promise<void>
-        }
+        boatGo: GameAnimation,
     }
     onBeforeBankChangeObservable: BABYLON.Observable<void>
     onAfterBankChangeObservable: BABYLON.Observable<void>
@@ -239,6 +237,12 @@ export async function createGame() {
             }
         },
         restart() {
+            // 动画停止
+            for (const animation of Object.values(game.animations)) {
+                for (const control of animation.controls) {
+                    control.stop()
+                }
+            }
             // 重置human
             for (const human of sceneObjs.humans) {
                 sceneObjs.regions.leftBank.putHuman(human)

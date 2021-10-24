@@ -65,12 +65,17 @@ function pushStepInfo(game: Game, parent: HTMLElement) {
     })
 }
 
+function pushGameRestartButton(parent: HTMLElement) {
+    parent.append($(`<button class="restart-button lu-restart-button">重开</button>`)[0])
+}
+
 export function createGUI({game, boat, humans}: {
     game: Game, boat: Region, humans: Iterable<Human>,
 }) {
     let guiDiv = $("#gui")[0]
     guiDiv.style.backgroundColor = "transparent"
     guiDiv.append(createBoatLeaveButton({game, boat, humans}))
+    pushGameRestartButton(guiDiv)
 
     let gameFailedUi = createGameFailed()
     let gamePassUi = createGamePass()
