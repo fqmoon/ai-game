@@ -10,7 +10,8 @@ export async function createSceneObjs({scene, game}: {
     scene: BABYLON.Scene, game: Game,
 }) {
     function createSkyLight() {
-        return new BABYLON.DirectionalLight("light", new BABYLON.Vector3(0.2, -1, 1), scene);
+        // 线性光是有范围的，这里乘100
+        return new BABYLON.DirectionalLight("light", new BABYLON.Vector3(0.2, -1, 1).scale(100), scene);
     }
 
     // 天光对非PBR起效
