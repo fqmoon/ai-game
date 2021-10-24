@@ -52,7 +52,7 @@ export class StepInfo {
     }
 }
 
-export class StepController {
+export class StepLogger {
     _stepInfo = new StepInfo()
     onAfterStepInfoChangeObservable = new BABYLON.Observable<StepInfo>()
 
@@ -81,5 +81,25 @@ export class StepController {
 
     reverseLastStep() {
         // TODO 撤销上一步功能
+    }
+
+
+}
+
+function operationsToStepInfo() {
+//TODO
+}
+
+class StepLoader {
+    // _game: Game
+
+    loadStep(step: Step) {
+
+    }
+
+    loadStepInfo(stepInfo: StepInfo, restart = true) {
+        if (restart){
+
+        }
     }
 }

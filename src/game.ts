@@ -7,7 +7,7 @@ import {createGUI} from "./gui";
 import {createRules} from "./rule";
 import {createBoatGoAnimation, GameAnimation} from "./animations";
 import * as BABYLON_MATERIALS from "babylonjs-materials";
-import {StepController} from "./step";
+import {StepLogger} from "./step";
 
 export type GameStatus = "continue" | "failed" | "pass"
 
@@ -43,7 +43,7 @@ export interface Game {
     readonly boat: Region
     readonly curBank: Region
     readonly nextBank: Region
-    stepController: StepController
+    stepController: StepLogger
     // 分别对应游戏继续、失败、过关
     status: GameStatus
     animations: {
@@ -201,6 +201,7 @@ export async function createGame() {
     // @ts-ignore
     let game: Game = {
         humanDrag: createHumanDrag(),
+        // TODO remove
         getDstRegion() {
             for (const region of this.humanDrag.activeRegions) {
                 if (region !== this.boat)
@@ -263,12 +264,12 @@ export async function createGame() {
         }
     }
 
-    game.stepController = new StepController(game)
+    game.stepController = new StepLogger(game)
     let camera = createCamera({scene, canvas, game: game,})
     let sceneObjs = await createSceneObjs({scene, game: game,})
     let _boat = sceneObjs.regions.boat
-    let _curBank = sceneObjs.regions.leftBank
-    let _nextBank = sceneObjs.regions.rightBank
+    let _curBank = sceneObjs.regions.leftBank as Region
+    let _nextBank = sceneObjs.regions.rightBank as Region
     let gui = createGUI({
         game: game,
         boat: sceneObjs.regions.boat,
