@@ -293,14 +293,22 @@ export async function createGame() {
         }
     }
 
+    function setRightRotation(res: BABYLON.ISceneLoaderAsyncResult) {
+        for (const mesh of res.meshes) {
+            mesh.rotation.y = Math.PI
+        }
+    }
+
     {
         // bank model
         let bankLoadRes = await BABYLON.SceneLoader.ImportMeshAsync("", "", "bank.glb", scene,)
         setReceiveShadows(bankLoadRes)
+        setRightRotation(bankLoadRes)
 
         // waterbottom model
         let wdRes = await BABYLON.SceneLoader.ImportMeshAsync("", "", "waterbottom.glb", scene,)
-        setReceiveShadows(bankLoadRes)
+        setReceiveShadows(wdRes)
+        setRightRotation(wdRes)
 
         // 水面
         var waterMesh = BABYLON.Mesh.CreateGround("waterMesh", 1000, 1000, 32, scene, false);

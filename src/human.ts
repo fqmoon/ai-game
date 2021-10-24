@@ -43,6 +43,7 @@ export async function createHuman({scene, position, identity, game}: {
     }
 
     let meshes = (await loadMesh()).meshes
+    meshes.forEach(mesh => mesh.rotation.y = Math.PI)
     let mesh = meshes[0]
 
     let human = {
