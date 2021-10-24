@@ -310,6 +310,11 @@ export async function createGame() {
     }
 
     {
+        let boatLoadRes = await BABYLON.SceneLoader.ImportMeshAsync("", "", "boat.glb", scene,)
+        setReceiveShadows(boatLoadRes)
+        setRightRotation(boatLoadRes)
+        setShadow(boatLoadRes)
+
         // bank model
         let bankLoadRes = await BABYLON.SceneLoader.ImportMeshAsync("", "", "bank.glb", scene,)
         setReceiveShadows(bankLoadRes)
@@ -346,6 +351,9 @@ export async function createGame() {
         // 无法将上面的语句替换为下面，只加入父节点不能渲染。其中父节点为空节点
         // waterMaterial.addToRenderList(bankLoadRes.meshes[0]);
         for (const mesh of wdRes.meshes) {
+            waterMaterial.addToRenderList(mesh);
+        }
+        for (const mesh of boatLoadRes.meshes) {
             waterMaterial.addToRenderList(mesh);
         }
         waterMaterial.addToRenderList(skybox);
