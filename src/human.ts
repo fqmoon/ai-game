@@ -14,6 +14,7 @@ export interface HumanMesh extends BABYLON.AbstractMesh {
 
 export interface Human {
     mesh: HumanMesh
+    meshes: HumanMesh[]
     yOff: number
     dragYOff: number
     identity: HumanIdentity
@@ -26,35 +27,34 @@ export interface Human {
     setPosByPlanePos(planePos: BABYLON.Vector2): void
 }
 
-export function createHuman({scene, position, identity, game}: {
+export async function createHuman({scene, position, identity, game}: {
     scene: BABYLON.Scene, position: BABYLON.Vector3, identity: HumanIdentity, game: Game,
-}): Human {
+}): Promise<Human> {
 
+    // TODO 颜色不生效
     let activeColor = new BABYLON.Color3(1, 0, 0)
     let inactiveColor = new BABYLON.Color3(0.5, 0, 0)
 
     let material = new BABYLON.StandardMaterial("boxMat", scene)
     material.diffuseColor.copyFrom(activeColor)
 
-    function createBox() {
-        const box = BABYLON.MeshBuilder.CreateBox("box", {
-            width: 1,
-            height: 1,
-            depth: 1,
-        });
-        box.position = position
-        box.material = material
-        return box
+    async function loadMesh() {
+        return BABYLON.SceneLoader.ImportMeshAsync("", "", identity + ".glb", scene,)
     }
 
-    let mesh = createBox() as HumanMesh
+    let meshes = (await loadMesh()).meshes
+    // TODO 对cannibal的叉子无效？但对台阶有效。所以目前的这个模型是反着的
+    meshes.forEach(mesh => mesh.rotation.y = Math.PI)
+    let mesh = meshes[0]
 
     let human = {
+        // TODO 删除mesh，用meshes即可
         mesh,
+        meshes,
         identity,
         // 离地面高度
-        yOff: 0.5,
-        dragYOff: 3,
+        yOff: 0,
+        dragYOff: 1,
         slotManager: undefined,
         slotPos: undefined,
         // TODO 更名为private或直接删掉
@@ -69,9 +69,11 @@ export function createHuman({scene, position, identity, game}: {
             mesh.position.z = planePos.y
         },
     } as Human
-    mesh.metadata = {
-        gameObj: human,
-        gameObjType: "Human",
+    for (let mesh of meshes) {
+        if (!mesh.metadata)
+            mesh.metadata = {}
+        mesh.metadata.gameObj = human
+        mesh.metadata.gameObjType = "Human"
     }
 
     function putIntoRegion() {

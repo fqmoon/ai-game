@@ -1,84 +1,78 @@
 import * as BABYLON from "babylonjs";
+import 'babylonjs-loaders';
 import {createHuman, Human} from "./human";
 import {createGround} from "./ground";
-import {createRegion} from "./region";
+import {createBank, createBoat} from "./region";
 import {Game} from "./game";
+import {SlotSize} from "./slot";
 
-export function createSceneObjs({scene, game}: {
+export async function createSceneObjs({scene, game}: {
     scene: BABYLON.Scene, game: Game,
 }) {
     function createSkyLight() {
-        const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+        // 线性光是有范围的，这里乘100
+        let light = new BABYLON.DirectionalLight("light", new BABYLON.Vector3(-1, -1, 1).scale(100), scene);
+        light.intensity = 5
         return light
     }
 
-    function createPointLight() {
-        let light = new BABYLON.PointLight("pl", new BABYLON.Vector3(2, 3, 4), scene)
-        light.intensity = 0.5;
-        var lightSphere = BABYLON.Mesh.CreateSphere("sphere", 10, 1, scene);
-        lightSphere.position = light.position;
-        lightSphere.material = new BABYLON.StandardMaterial("light", scene)
-        // @ts-ignore
-        lightSphere.material.emissiveColor = new BABYLON.Color3(1, 1, 0);
-        return {light, lightSphere}
-    }
-
-    function castShadow(light: BABYLON.IShadowLight, obj: BABYLON.AbstractMesh) {
-        let shadowGen = new BABYLON.ShadowGenerator(1024, light)
-        shadowGen.addShadowCaster(obj);
-        shadowGen.usePoissonSampling = true;
-        return shadowGen
-    }
-
+    // 天光对非PBR起效
     let skyLight = createSkyLight()
     let ground = createGround({scene, game: game,})
 
     let humans = new Set<Human>()
     for (let i = 0; i < 3; i++) {
-        humans.add(createHuman({
+        humans.add(await createHuman({
             scene, identity: 'missionary',
             position: new BABYLON.Vector3(0, 0.5, 0),
             game: game,
         }))
     }
     for (let i = 0; i < 3; i++) {
-        humans.add(createHuman({
+        humans.add(await createHuman({
             scene, identity: 'cannibal',
             position: new BABYLON.Vector3(0, 0.5, 0),
             game: game,
         }))
     }
 
-    let {light: pointLight, lightSphere: pointLightSphere} = createPointLight()
-    let shadowGenerator = new BABYLON.ShadowGenerator(1024, pointLight)
-    shadowGenerator.usePoissonSampling = true;
-
-    for (const human of humans) {
-        shadowGenerator.addShadowCaster(human.mesh)
-    }
-
+    let bankW = 5, bankH = 10
+    let boatW = 4, boatH = 2
+    let cannibalSlotSize = [1, 3] as SlotSize
+    let missionarySlotSize = [1, 3] as SlotSize
     let regions = {
-        leftBank: createRegion({
+        leftBank: createBank({
             scene,
-            position: new BABYLON.Vector3(-30, 0.01, 0),
-            width: 20,
-            height: 40,
+            position: new BABYLON.Vector3(-10, 0.01, 0),
+            width: bankW,
+            height: bankH,
             game: game,
+            cannibalSlotSize,
+            missionarySlotSize,
         }),
-        rightBank: createRegion({
+        rightBank: createBank({
             scene,
-            position: new BABYLON.Vector3(30, 0.01, 0),
-            width: 20,
-            height: 40,
+            position: new BABYLON.Vector3(10, 0.01, 0),
+            width: bankW,
+            height: bankH,
             game: game,
+            cannibalSlotSize,
+            missionarySlotSize,
         }),
-        boat: createRegion({
+        boat: createBoat({
             scene,
             position: new BABYLON.Vector3(0, 0.01, 0),
-            width: 20,
-            height: 40,
+            width: boatW,
+            height: boatH,
             game: game,
+            humanSlotSize: [1, 2],
         }),
+    }
+
+    let shadowGenerator = new BABYLON.ShadowGenerator(2048, skyLight)
+    shadowGenerator.usePoissonSampling = true;
+    for (const human of humans) {
+        human.meshes.forEach(mesh => shadowGenerator.addShadowCaster(mesh))
     }
 
     return {

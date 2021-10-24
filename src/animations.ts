@@ -36,7 +36,7 @@ export function createBoatGoAnimation({game, scene, boat}: {
         let anim = new BABYLON.Animation("humanGoBank", "position", frameSpeed,
             BABYLON.Animation.ANIMATIONTYPE_VECTOR3)
 
-        let height = 3
+        let height = human.dragYOff
 
         // 设置keys，先抬起，再前行
         // TODO 写成easy

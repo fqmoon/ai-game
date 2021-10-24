@@ -1,17 +1,17 @@
 import * as BABYLON from "babylonjs";
 import {Game} from "./game";
 
+// TODO 改名，改为draggingMesh什么的
 export function createGround({scene, game}: {
     scene: BABYLON.Scene, game: Game
 }) {
     let mesh = BABYLON.MeshBuilder.CreateGround("ground", {
-        width: 100,
-        height: 100,
+        width: 30,
+        height: 20,
     }, scene)
-    let groundMat = new BABYLON.StandardMaterial("gm", scene)
-    groundMat.diffuseColor = new BABYLON.Color3(0.5, 0.5, 0.5)
-    mesh.material = groundMat
-    mesh.receiveShadows = true
+    // 隐藏，因为它只作为拖动计算点位用
+    mesh.visibility = 0
+    mesh.receiveShadows = false
 
     // 获取当前鼠标所在的地形位置
     function getPointerPositionOnGround() {

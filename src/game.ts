@@ -6,6 +6,7 @@ import {createCamera} from "./camera";
 import {createGUI} from "./gui";
 import {createRules} from "./rule";
 import {createBoatGoAnimation} from "./animations";
+import * as BABYLON_MATERIALS from "babylonjs-materials";
 
 export type GameStatus = "continue" | "failed" | "pass"
 
@@ -63,10 +64,16 @@ export interface Game {
     restart(): void
 }
 
-export function createGame() {
+export async function createGame() {
     let canvas = document.getElementById("game") as HTMLCanvasElement
     let engine = new BABYLON.Engine(canvas)
     let scene = new BABYLON.Scene(engine)
+    // 固定分辨率
+    canvas.width = 1920
+    canvas.height = 1080
+    canvas.style.minWidth = "1200px"
+    // 设置大小后要手动重新渲染
+    engine.resize();
     // Resize
     window.addEventListener("resize", function () {
         engine.resize();
@@ -248,7 +255,7 @@ export function createGame() {
     }
 
     let camera = createCamera({scene, canvas, game: game,})
-    let sceneObjs = createSceneObjs({scene, game: game,})
+    let sceneObjs = await createSceneObjs({scene, game: game,})
     let _boat = sceneObjs.regions.boat
     let _curBank = sceneObjs.regions.leftBank
     let _nextBank = sceneObjs.regions.rightBank
@@ -281,6 +288,81 @@ export function createGame() {
     }
 
     start()
+
+    // 加载环境光，对PBR材质生效
+    let hdrTexture = new BABYLON.CubeTexture("skybox", scene);
+    let skybox = scene.createDefaultSkybox(hdrTexture, true, 10000);
+
+    function setReceiveShadows(res: BABYLON.ISceneLoaderAsyncResult) {
+        for (const mesh of res.meshes) {
+            mesh.receiveShadows = true
+        }
+    }
+
+    function setRightRotation(res: BABYLON.ISceneLoaderAsyncResult) {
+        for (const mesh of res.meshes) {
+            mesh.rotation.y = Math.PI
+        }
+    }
+
+    function setShadow(res: BABYLON.ISceneLoaderAsyncResult) {
+        for (const mesh of res.meshes) {
+            sceneObjs.shadowGenerator.addShadowCaster(mesh)
+        }
+    }
+
+    {
+        let boatLoadRes = await BABYLON.SceneLoader.ImportMeshAsync("", "", "boat.glb", scene,)
+        setReceiveShadows(boatLoadRes)
+        setRightRotation(boatLoadRes)
+        setShadow(boatLoadRes)
+
+        // bank model
+        let bankLoadRes = await BABYLON.SceneLoader.ImportMeshAsync("", "", "bank.glb", scene,)
+        setReceiveShadows(bankLoadRes)
+        setRightRotation(bankLoadRes)
+        setShadow(bankLoadRes)
+
+        // waterbottom model
+        let wdRes = await BABYLON.SceneLoader.ImportMeshAsync("", "", "waterbottom.glb", scene,)
+        setReceiveShadows(wdRes)
+        setRightRotation(wdRes)
+
+        // 水面
+        var waterMesh = BABYLON.Mesh.CreateGround("waterMesh", 1000, 1000, 32, scene, false);
+        waterMesh.receiveShadows = true
+        waterMesh.position.y = -0.5
+
+        var waterMaterial = new BABYLON_MATERIALS.WaterMaterial("water_material", scene);
+        waterMaterial.bumpTexture = new BABYLON.Texture("waterbump.png", scene); // Set the bump texture
+        // Water properties
+        waterMaterial.windForce = 15;
+        waterMaterial.waveHeight = 0; // TODO 设置为0.1会导致折射不正确，会透过bank渲染出水底，不知道原因
+        waterMaterial.windDirection = new BABYLON.Vector2(1, 1);
+        waterMaterial.waterColor = new BABYLON.Color3(0.1, 0.1, 0.6);
+        waterMaterial.colorBlendFactor = 0.3;
+        waterMaterial.bumpHeight = 0.1;
+        waterMaterial.waveLength = 0.1;
+
+        for (const human of sceneObjs.humans) {
+            human.meshes.forEach(mesh => waterMaterial.addToRenderList(mesh))
+        }
+        for (const mesh of bankLoadRes.meshes) {
+            waterMaterial.addToRenderList(mesh);
+        }
+        // 无法将上面的语句替换为下面，只加入父节点不能渲染。其中父节点为空节点
+        // waterMaterial.addToRenderList(bankLoadRes.meshes[0]);
+        for (const mesh of wdRes.meshes) {
+            waterMaterial.addToRenderList(mesh);
+        }
+        for (const mesh of boatLoadRes.meshes) {
+            waterMaterial.addToRenderList(mesh);
+        }
+        waterMaterial.addToRenderList(skybox);
+
+        waterMesh.material = waterMaterial;
+    }
+
 
     return game
 }
