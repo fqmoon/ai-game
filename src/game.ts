@@ -66,11 +66,15 @@ export interface Game {
 
 export async function createGame() {
     let canvas = document.getElementById("game") as HTMLCanvasElement
+    let engine = new BABYLON.Engine(canvas)
+    let scene = new BABYLON.Scene(engine)
     // 固定分辨率
     canvas.width = 1920
     canvas.height = 1080
-    let engine = new BABYLON.Engine(canvas)
-    let scene = new BABYLON.Scene(engine)
+    // Resize
+    window.addEventListener("resize", function () {
+        engine.resize();
+    });
 
     function createHumanDrag(): HumanDrag {
         let _lastHuman: Human | undefined
