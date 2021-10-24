@@ -3,10 +3,16 @@ import * as BABYLON from "babylonjs";
 import {Region} from "./region";
 import {Game} from "./game";
 
+export interface GameAnimation {
+    readonly controls: Iterable<BABYLON.Animatable>
+
+    play(): Promise<void>
+}
+
 // 开船动画
 export function createBoatGoAnimation({game, scene, boat}: {
     game: Game, scene: BABYLON.Scene, boat: Region,
-}) {
+}): GameAnimation {
     let frameSpeed = 60
 
     let humanAnims = new Map<Human, BABYLON.Animation>()
@@ -63,10 +69,15 @@ export function createBoatGoAnimation({game, scene, boat}: {
         humanAnims.set(human, anim)
     }
 
+    let controls = [] as BABYLON.Animatable[]
+
     async function beginAnimations() {
+        controls.forEach(control => control.stop())
+        controls = []
         let promises = []
         for (const [human, anim] of humanAnims.entries()) {
             let control = scene.beginDirectAnimation(human.mesh, [anim], 0, 600, false)
+            controls.push(control)
             let promise = new Promise<null>((resolve, reject) => {
                 control.onAnimationEndObservable.add(() => {
                     resolve(null)
@@ -78,6 +89,9 @@ export function createBoatGoAnimation({game, scene, boat}: {
     }
 
     return {
+        get controls() {
+            return controls
+        },
         async play() {
             createAnimations()
             await beginAnimations()
