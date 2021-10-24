@@ -71,6 +71,7 @@ export async function createGame() {
     // 固定分辨率
     canvas.width = 1920
     canvas.height = 1080
+    canvas.style.minWidth = "1200px"
     // Resize
     window.addEventListener("resize", function () {
         engine.resize();
