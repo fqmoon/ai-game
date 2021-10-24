@@ -10,7 +10,7 @@ export function createCamera({scene, canvas, game}: {
 
     // 仅在调试场景时附加相机控制
     // @ts-ignore
-    if (!window.debugScene) {
+    if (window.debugScene) {
         camera.attachControl(canvas, true);
 
         // 在拖拽时禁止相机旋转
