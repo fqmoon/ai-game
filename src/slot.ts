@@ -11,7 +11,7 @@ export type SlotSize = [number, number]
 export function createSlotManager({leftDownPosition, rightUpPosition, slotSize}: {
     leftDownPosition: BABYLON.Vector2,
     rightUpPosition: BABYLON.Vector2,
-    // 槽的尺寸，以行列表示
+    // 槽的尺寸，以行列表示 TODO 改成宽高更符合习惯
     slotSize: SlotSize,
 }) {
     // 创建空间矩阵，位图表示法

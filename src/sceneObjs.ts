@@ -2,8 +2,9 @@ import * as BABYLON from "babylonjs";
 import 'babylonjs-loaders';
 import {createHuman, Human} from "./human";
 import {createGround} from "./ground";
-import {createRegion} from "./region";
+import {createBank, createBoat} from "./region";
 import {Game} from "./game";
+import {SlotSize} from "./slot";
 
 export async function createSceneObjs({scene, game}: {
     scene: BABYLON.Scene, game: Game,
@@ -33,28 +34,35 @@ export async function createSceneObjs({scene, game}: {
     }
 
     let bankW = 5, bankH = 10
-    let boatW = 2, boatH = 3
+    let boatW = 4, boatH = 2
+    let cannibalSlotSize = [1, 3] as SlotSize
+    let missionarySlotSize = [1, 3] as SlotSize
     let regions = {
-        leftBank: createRegion({
+        leftBank: createBank({
             scene,
             position: new BABYLON.Vector3(-10, 0.01, 0),
             width: bankW,
             height: bankH,
             game: game,
+            cannibalSlotSize,
+            missionarySlotSize,
         }),
-        rightBank: createRegion({
+        rightBank: createBank({
             scene,
             position: new BABYLON.Vector3(10, 0.01, 0),
             width: bankW,
             height: bankH,
             game: game,
+            cannibalSlotSize,
+            missionarySlotSize,
         }),
-        boat: createRegion({
+        boat: createBoat({
             scene,
             position: new BABYLON.Vector3(0, 0.01, 0),
             width: boatW,
             height: boatH,
             game: game,
+            humanSlotSize: [1, 2],
         }),
     }
 
