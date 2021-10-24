@@ -43,6 +43,7 @@ export interface Game {
     readonly boat: Region
     readonly curBank: Region
     readonly nextBank: Region
+    stepController: StepController
     // 分别对应游戏继续、失败、过关
     status: GameStatus
     animations: {
@@ -56,6 +57,7 @@ export interface Game {
     onAfterBoatGoObservable: BABYLON.Observable<void>
     onBeforeStatusChangeObservable: BABYLON.Observable<ValueChange<GameStatus>>
     onAfterStatusChangeObservable: BABYLON.Observable<ValueChange<GameStatus>>
+    onAfterRestartObservable: BABYLON.Observable<void>
 
     getDstRegion(): Region
 
@@ -227,6 +229,7 @@ export async function createGame() {
         onAfterStatusChangeObservable: new BABYLON.Observable(),
         onBeforeBoatGoObservable: new BABYLON.Observable(),
         onAfterBoatGoObservable: new BABYLON.Observable(),
+        onAfterRestartObservable: new BABYLON.Observable(),
         async boatGo() {
             _changeBank(this.nextBank, this.curBank)
             if (this.status === 'continue') {
@@ -243,6 +246,7 @@ export async function createGame() {
             // 重置bank
             _changeBank(sceneObjs.regions.leftBank, sceneObjs.regions.rightBank)
             game.status = "continue"
+            game.onAfterRestartObservable.notifyObservers()
         },
         get boat() {
             return _boat
@@ -255,6 +259,7 @@ export async function createGame() {
         }
     }
 
+    game.stepController = new StepController(game)
     let camera = createCamera({scene, canvas, game: game,})
     let sceneObjs = await createSceneObjs({scene, game: game,})
     let _boat = sceneObjs.regions.boat
@@ -270,7 +275,6 @@ export async function createGame() {
         leftBank: sceneObjs.regions.leftBank,
         rightBank: sceneObjs.regions.rightBank,
     })
-    let stepController = new StepController(game)
 
     let ground = sceneObjs.ground
     let regions = sceneObjs.regions

@@ -50,36 +50,24 @@ function createGamePass() {
     return div
 }
 
-function injectCss() {
-    $('head').append(`<style type="text/css">
-        div{
-            left: 0;
-            right: 0;
-            top: 0;
-            bottom: 0;
-            position: absolute;
-        }
-        .background-ui{
-            margin: 15%;
-            background-color: #0003;
-        }
-        /* 模态div，阻塞用户事件 */
-        .model-div{
-        }
-        .restart-button{
-            bottom: 1em;
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-    </style>`)
+function pushStepInfo(game: Game, parent: HTMLElement) {
+    parent.append(
+        $(`<div class="step-info">
+            <h1 id="step-count"></h1>
+        </div>`)[0])
+
+    let pick = $("#step-count")[0]
+    game.onAfterRestartObservable.add(() => {
+        pick.innerText = "0步"
+    })
+    game.stepController.onAfterStepInfoChangeObservable.add(stepInfo => {
+        pick.innerText = stepInfo.length + "步"
+    })
 }
 
 export function createGUI({game, boat, humans}: {
     game: Game, boat: Region, humans: Iterable<Human>,
 }) {
-    injectCss()
-
     let guiDiv = $("#gui")[0]
     guiDiv.style.backgroundColor = "transparent"
     guiDiv.append(createBoatLeaveButton({game, boat, humans}))
@@ -88,6 +76,8 @@ export function createGUI({game, boat, humans}: {
     let gamePassUi = createGamePass()
     guiDiv.append(gameFailedUi)
     guiDiv.append(gamePassUi)
+
+    pushStepInfo(game, guiDiv)
 
     let gui = {
         rootDiv: guiDiv,

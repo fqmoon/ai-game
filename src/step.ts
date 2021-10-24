@@ -54,6 +54,7 @@ export class StepInfo {
 
 export class StepController {
     _stepInfo = new StepInfo()
+    onAfterStepInfoChangeObservable = new BABYLON.Observable<StepInfo>()
 
     constructor(game: Game) {
         let from: Region
@@ -74,7 +75,7 @@ export class StepController {
             let step = new Step(from, to, m, c)
             this._stepInfo.putStep(step)
 
-            console.log(this._stepInfo)
+            this.onAfterStepInfoChangeObservable.notifyObservers(this._stepInfo)
         })
     }
 
