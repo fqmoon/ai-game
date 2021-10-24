@@ -66,7 +66,7 @@ function pushStepInfo(game: Game, parent: HTMLElement) {
 }
 
 function pushGameRestartButton(parent: HTMLElement) {
-    parent.append($(`<button class="restart-button lu-restart-button">重开</button>`)[0])
+    parent.append($(`<button class="restart-button lu-restart-button"><img src="restart.svg"></button>`)[0])
 }
 
 export function createGUI({game, boat, humans}: {

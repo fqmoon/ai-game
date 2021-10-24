@@ -28,6 +28,11 @@ div {
     position: absolute;
     bottom: auto;
     transform: none;
+    width: 5em;
+    height: 5em;
+    background: transparent;
+    /* TODO 设置无阴影不起作用,另外需要去年按钮样式 */
+    box-shadow: none;
 }
 
 .step-info {
