@@ -6,6 +6,7 @@ import {createCamera} from "./camera";
 import {createGUI} from "./gui";
 import {createRules} from "./rule";
 import {createBoatGoAnimation} from "./animations";
+import * as BABYLON_MATERIALS from "babylonjs-materials";
 
 export type GameStatus = "continue" | "failed" | "pass"
 
@@ -283,9 +284,36 @@ export async function createGame() {
     start()
 
     // 加载环境光，对PBR材质生效
-    let hdrTexture = new BABYLON.CubeTexture("SpecularHDR.dds", scene);
-    // TODO 不够亮
-    scene.createDefaultSkybox(hdrTexture, true, 10000);
+    let hdrTexture = new BABYLON.CubeTexture("skybox", scene);
+    let skybox = scene.createDefaultSkybox(hdrTexture, true, 10000);
+
+    // 水面
+    {
+        var waterMesh = BABYLON.Mesh.CreateGround("waterMesh", 1000, 1000, 32, scene, false);
+        waterMesh.position.y = -5
+
+        var waterMaterial = new BABYLON_MATERIALS.WaterMaterial("water_material", scene);
+        waterMaterial.bumpTexture = new BABYLON.Texture("waterbump.png", scene); // Set the bump texture
+        // Water properties
+        waterMaterial.windForce = -15;
+        waterMaterial.waveHeight = 0.1;
+        waterMaterial.windDirection = new BABYLON.Vector2(1, 1);
+        waterMaterial.waterColor = new BABYLON.Color3(0.1, 0.1, 0.6);
+        waterMaterial.colorBlendFactor = 0.3;
+        waterMaterial.bumpHeight = 0.1;
+        waterMaterial.waveLength = 0.1;
+
+        // Add skybox and ground to the reflection and refraction
+        for (const human of sceneObjs.humans) {
+            waterMaterial.addToRenderList(human.mesh);
+        }
+        for (const region of Object.values(sceneObjs.regions)) {
+            waterMaterial.addToRenderList(region.mesh);
+        }
+        waterMaterial.addToRenderList(skybox);
+
+        waterMesh.material = waterMaterial;
+    }
 
     return game
 }
