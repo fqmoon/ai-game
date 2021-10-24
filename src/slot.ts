@@ -142,6 +142,9 @@ export function createSlotManager({leftDownPosition, rightUpPosition, slotSize}:
         get capacity() {
             return capacity
         },
+        get canPut() {
+            return this.capacity > this.size
+        }
     }
 }
 

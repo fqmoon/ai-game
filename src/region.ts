@@ -118,6 +118,9 @@ export function createBank({scene, position, width, height, game, cannibalSlotSi
             if (newSlotManager === human.slotManager)
                 return false
 
+            if (!newSlotManager.canPut)
+                return false
+
             // 先pop
             human.region?.popHuman(human)
             // 再执行put具体操作
@@ -247,6 +250,9 @@ export function createBoat({scene, position, width, height, game, humanSlotSize}
                 return false
 
             if (slotManager === human.slotManager)
+                return false
+
+            if (!slotManager.canPut)
                 return false
 
             // 先pop
