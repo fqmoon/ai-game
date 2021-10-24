@@ -287,12 +287,20 @@ export async function createGame() {
     let hdrTexture = new BABYLON.CubeTexture("skybox", scene);
     let skybox = scene.createDefaultSkybox(hdrTexture, true, 10000);
 
+    function setReceiveShadows(res: BABYLON.ISceneLoaderAsyncResult) {
+        for (const mesh of res.meshes) {
+            mesh.receiveShadows = true
+        }
+    }
+
     {
         // bank model
         let bankLoadRes = await BABYLON.SceneLoader.ImportMeshAsync("", "", "bank.glb", scene,)
+        setReceiveShadows(bankLoadRes)
 
         // waterbottom model
         let wdRes = await BABYLON.SceneLoader.ImportMeshAsync("", "", "waterbottom.glb", scene,)
+        setReceiveShadows(bankLoadRes)
 
         // 水面
         var waterMesh = BABYLON.Mesh.CreateGround("waterMesh", 1000, 1000, 32, scene, false);

@@ -40,7 +40,7 @@ export function createBank({scene, position, width, height, game, cannibalSlotSi
         width,
         height,
     }, scene)
-    mesh.receiveShadows = true
+    mesh.receiveShadows = false
     mesh.position = position
     let material = new BABYLON.StandardMaterial("", scene)
     mesh.material = material
@@ -49,6 +49,7 @@ export function createBank({scene, position, width, height, game, cannibalSlotSi
     let promoteColor = new BABYLON.Color3(0.0, 0.5, 1.0)
     let selectedColor = new BABYLON.Color3(0.0, 1.0, 0.5)
     material.diffuseColor.copyFrom(originColor)
+    material.alpha = 0
 
     let slotManagers: { [key in HumanIdentity]: SlotManager } = {
         'missionary': createSlotManager({
@@ -162,10 +163,13 @@ export function createBank({scene, position, width, height, game, cannibalSlotSi
         setColorByDrag(status: RegionStatus) {
             if (status === "noDrag") {
                 material.diffuseColor.copyFrom(originColor)
+                material.alpha = 0
             } else if (status === "reach") {
                 material.diffuseColor.copyFrom(selectedColor)
+                material.alpha = 0.3
             } else {
                 material.diffuseColor.copyFrom(promoteColor)
+                material.alpha = 0.3
             }
         },
         onAfterHumanCountChangeObservable: new BABYLON.Observable<number>(),
@@ -182,7 +186,7 @@ export function createBoat({scene, position, width, height, game, humanSlotSize}
         width,
         height,
     }, scene)
-    mesh.receiveShadows = true
+    mesh.receiveShadows = false
     mesh.position = position
     let material = new BABYLON.StandardMaterial("", scene)
     mesh.material = material
@@ -191,6 +195,7 @@ export function createBoat({scene, position, width, height, game, humanSlotSize}
     let promoteColor = new BABYLON.Color3(0.0, 0.5, 1.0)
     let selectedColor = new BABYLON.Color3(0.0, 1.0, 0.5)
     material.diffuseColor.copyFrom(originColor)
+    material.alpha = 0
 
     let slotManager = createSlotManager({
         leftDownPosition: new BABYLON.Vector2(position.x - width * 0.5, position.z - height * 0.5),
@@ -294,10 +299,13 @@ export function createBoat({scene, position, width, height, game, humanSlotSize}
         setColorByDrag(status: RegionStatus) {
             if (status === "noDrag") {
                 material.diffuseColor.copyFrom(originColor)
+                material.alpha = 0
             } else if (status === "reach") {
                 material.diffuseColor.copyFrom(selectedColor)
+                material.alpha = 0.3
             } else {
                 material.diffuseColor.copyFrom(promoteColor)
+                material.alpha = 0.3
             }
         },
         onAfterHumanCountChangeObservable: new BABYLON.Observable<number>(),
