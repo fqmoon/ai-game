@@ -10,7 +10,7 @@ function createBoatLeaveButton({game, boat, humans}: {
 }) {
     let button = $.parseHTML(`<button 
             disabled
-            style="position: absolute;bottom: 0;margin: 1em; left: 50%;transform: translateX(-50%)"
+            style="position: absolute;bottom: 0;margin: 1em; left: 50%;transform: translateX(-50%); width: 10em; height: 5em"
         >开船</button>`)[0] as HTMLButtonElement
 
     function setButtonStatus(humanCountOnBoat: number) {
@@ -39,7 +39,7 @@ function createGameMain() {
                     <label for="game-type-game">游戏模式</label>
                     <input type="radio" id="game-type-show" name="game-type" value="show">
                     <label for="game-type-show">演示模式</label>
-                    <label id="path-textarea">输入操作信息：</label>
+                    <label id="path-textarea">输入路径信息：</label>
                     <textarea></textarea>
                     <button id="ai-path">自动用AI算法填充</button>
                 </div>
@@ -84,10 +84,23 @@ function createError() {
     return div
 }
 
+function createStepLog() {
+    let div = $.parseHTML(`<div class="model-div">
+            <div class="background-ui" style="text-align: center; color: white">
+                <h1 style="color: white;text-align: center">路径信息</h1>
+                <textarea id="step-log" style="min-height: 20em" readonly></textarea>
+                <br>
+                <button class="close-log-button">关闭</button>
+            </div>
+        </div>`)[0] as HTMLDivElement
+    return div
+}
+
 function pushStepInfo(game: Game, parent: HTMLElement) {
     parent.append(
         $(`<div class="step-info">
             <h1 id="step-count"></h1>
+            <button id="export-path">导出路径</button>
         </div>`)[0])
 
     let pick = $("#step-count")[0]
@@ -115,12 +128,14 @@ export function createGUI({game, boat, humans}: {
     let gameFailedUi = createGameFailed()
     let gamePassUi = createGamePass()
     let errorUi = createError()
+    let stepLog = createStepLog()
 
     guiDiv.append(gameFailedUi)
     guiDiv.append(gamePassUi)
 
     pushStepInfo(game, guiDiv)
     // main ui 要在step info ui 之后
+    guiDiv.append(stepLog)
     guiDiv.append(gameMainUi)
     guiDiv.append(errorUi)
 
@@ -150,6 +165,12 @@ export function createGUI({game, boat, humans}: {
                 errorUi.style.display = 'block'
             else
                 errorUi.style.display = 'none'
+        },
+        set gameStepLogUiShow(v: boolean) {
+            if (v)
+                stepLog.style.display = 'block'
+            else
+                stepLog.style.display = 'none'
         },
         showError(str: string) {
             gui.gameErrorUiShow = true
@@ -208,6 +229,17 @@ export function createGUI({game, boat, humans}: {
             throw Error()
         }
     }
+
+    $("#export-path").on('click', () => {
+        let str = game.stepLogger.getStepString()
+        gui.gameStepLogUiShow = true
+        $("#step-log").text(str)
+    })
+    gui.gameStepLogUiShow = false
+
+    $(".close-log-button").on('click', () => {
+        gui.gameStepLogUiShow = false
+    })
 
     return gui
 }
