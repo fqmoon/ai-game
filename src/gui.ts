@@ -32,6 +32,7 @@ function createGameFailed() {
     let div = $.parseHTML(`<div class="model-div">
             <div class="background-ui">
                 <div class="button-container">
+                    <h1 style="color: white;text-align: center">游戏失败！</h1>
                     <button class="restart-button">重来</button>
                 </div>
             </div>
@@ -43,7 +44,7 @@ function createGamePass() {
     let div = $.parseHTML(`<div class="model-div">
             <div class="background-ui">
                 <div class="button-container">
-                        <h1 style="color: wheat;text-align: center">游戏通关！</h1>
+                        <h1 style="color: white;text-align: center">游戏通关！</h1>
 <!--                    TODO 现在还没有这个功能 -->
 <!--                    <button class="home-button">回到主菜单</button>-->
                 </div>

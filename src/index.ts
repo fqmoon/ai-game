@@ -17,12 +17,12 @@ async function main() {
         //@ts-ignore
         window.f = stringToOperations
 
-        let stepInfo = operationsToStepInfo(game, res.operations)
+        // let stepInfo = operationsToStepInfo(game, res.operations)
 
         // await StepAnimation.fromStepInfo(game, stepInfo)
 
         // @ts-ignore
-        await game.stepLoader.loadStepInfo(stepInfo);
+        // await game.stepLoader.loadStepInfo(stepInfo);
     }
 }
 
