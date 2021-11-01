@@ -2,6 +2,7 @@ import {Game} from "./game";
 import * as $ from "jquery"
 import {Human} from "./human";
 import {Region} from "./region";
+import {AI, operationsToString} from "./ai";
 
 // 开船按钮
 function createBoatLeaveButton({game, boat, humans}: {
@@ -40,6 +41,7 @@ function createGameMain() {
                     <label for="game-type-show">演示模式</label>
                     <label id="path-textarea">输入操作信息：</label>
                     <textarea></textarea>
+                    <button id="ai-path">自动用AI算法填充</button>
                 </div>
                 <button class="start-button">开始</button>
             </div>
@@ -193,6 +195,17 @@ export function createGUI({game, boat, humans}: {
                 game.loadStepString(str)
             }
             gui.gameMainShow = false
+        }
+    }
+
+    $("#ai-path")[0].onclick = () => {
+        let ai = new AI(3, 3, 2)
+        let res = ai.run()
+        if (res) {
+            let str = operationsToString(res.operations)
+            stepStrUi.value = str
+        } else {
+            throw Error()
         }
     }
 
