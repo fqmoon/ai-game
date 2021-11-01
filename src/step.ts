@@ -92,6 +92,14 @@ export class StepLogger {
     reverseLastStep() {
         // TODO 撤销上一步功能
     }
+
+    getStepString() {
+        let str = ''
+        for (const step of this._stepInfo) {
+            str += step.m + ' ' + step.c + '\n'
+        }
+        return str
+    }
 }
 
 function operationToStep(game: Game, operation: Operation) {
