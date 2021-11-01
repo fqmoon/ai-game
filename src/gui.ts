@@ -66,8 +66,7 @@ function createGamePass() {
             <div class="background-ui">
                 <h1 style="color: white;text-align: center">游戏通关！</h1>
                 <div class="button-container">
-<!--                    TODO 现在还没有这个功能 -->
-<!--                    <button class="home-button">回到主菜单</button>-->
+                    <button class="restart-button">重来</button>
                 </div>
             </div>
         </div>`)[0] as HTMLDivElement
@@ -104,6 +103,7 @@ function pushStepInfo(game: Game, parent: HTMLElement) {
         </div>`)[0])
 
     let pick = $("#step-count")[0]
+    // TODO 更好的写法
     game.onAfterRestartObservable.add(() => {
         pick.innerText = "0步"
     })
@@ -196,12 +196,9 @@ export function createGUI({game, boat, humans}: {
         }
     })
 
-    let restartButtons = $(".restart-button")
-    for (const restartButton of restartButtons) {
-        restartButton.onclick = ev => {
-            game.restart()
-        }
-    }
+    $(".restart-button").on('click', () => {
+        gui.gameMainShow = true
+    })
 
     // ----------- 主菜单逻辑 ----------- //
     let startBtns = $(".start-button")
