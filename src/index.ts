@@ -1,9 +1,11 @@
 import {createGame} from "./game";
 import {AI} from "./ai"
 
-let game = createGame()
+async function main() {
+    let game = await createGame()
 
+    // 这个是AI算法
+    let ai = new AI(3, 3, 2)
+}
 
-let ai = new AI(3, 3, 2)
-
-console.log(ai.run())
+main()

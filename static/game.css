@@ -11,6 +11,36 @@ div {
     background-color: #0003;
 }
 
+.game-main-ui {
+    margin: 0;
+    background-color: rgba(0, 0, 0, 0.49);
+    text-align: center;
+    color: white;
+}
+
+.game-main-ui * {
+    position: unset;
+    margin: 1em;
+}
+
+.game-main-ui textarea {
+    min-height: 10em;
+    margin: 0;
+}
+
+.game-main-ui h1 {
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.game-main-ui h2 {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.start-button {
+    height: 5em;
+    width: 20em;
+}
+
 /* 模态div，阻塞用户事件 */
 .model-div {
 }
@@ -43,4 +73,9 @@ div {
     height: 5em;
     text-align: center;
     color: wheat;
+}
+
+#error-text {
+    color: white;
+    text-align: center;
 }

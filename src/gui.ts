@@ -28,9 +28,29 @@ function createBoatLeaveButton({game, boat, humans}: {
     return button
 }
 
+function createGameMain() {
+    let div = $.parseHTML(`<div class="model-div">
+            <div class="game-main-ui">
+                <h1 style="color: white;text-align: center">MC问题交互性演示</h1>
+                <div>
+                    <h2>选择模式</h2>
+                    <input type="radio" id="game-type-game" name="game-type" value="game" checked>
+                    <label for="game-type-game">游戏模式</label>
+                    <input type="radio" id="game-type-show" name="game-type" value="show">
+                    <label for="game-type-show">演示模式</label>
+                    <label id="path-textarea">输入操作信息：</label>
+                    <textarea></textarea>
+                </div>
+                <button class="start-button">开始</button>
+            </div>
+        </div>`)[0] as HTMLDivElement
+    return div
+}
+
 function createGameFailed() {
     let div = $.parseHTML(`<div class="model-div">
             <div class="background-ui">
+                <h1 style="color: white;text-align: center">游戏失败！</h1>
                 <div class="button-container">
                     <button class="restart-button">重来</button>
                 </div>
@@ -42,9 +62,21 @@ function createGameFailed() {
 function createGamePass() {
     let div = $.parseHTML(`<div class="model-div">
             <div class="background-ui">
+                <h1 style="color: white;text-align: center">游戏通关！</h1>
                 <div class="button-container">
-                    <button class="home-button">回到主菜单</button>
+<!--                    TODO 现在还没有这个功能 -->
+<!--                    <button class="home-button">回到主菜单</button>-->
                 </div>
+            </div>
+        </div>`)[0] as HTMLDivElement
+    return div
+}
+
+function createError() {
+    let div = $.parseHTML(`<div class="model-div">
+            <div class="background-ui">
+                <h1 style="color: white;text-align: center">出错啦！</h1>
+                <p id="error-text"></p>
             </div>
         </div>`)[0] as HTMLDivElement
     return div
@@ -60,7 +92,7 @@ function pushStepInfo(game: Game, parent: HTMLElement) {
     game.onAfterRestartObservable.add(() => {
         pick.innerText = "0步"
     })
-    game.stepController.onAfterStepInfoChangeObservable.add(stepInfo => {
+    game.stepLogger.onAfterStepInfoChangeObservable.add(stepInfo => {
         pick.innerText = stepInfo.length + "步"
     })
 }
@@ -77,15 +109,28 @@ export function createGUI({game, boat, humans}: {
     guiDiv.append(createBoatLeaveButton({game, boat, humans}))
     pushGameRestartButton(guiDiv)
 
+    let gameMainUi = createGameMain()
     let gameFailedUi = createGameFailed()
     let gamePassUi = createGamePass()
+    let errorUi = createError()
+
     guiDiv.append(gameFailedUi)
     guiDiv.append(gamePassUi)
 
     pushStepInfo(game, guiDiv)
+    // main ui 要在step info ui 之后
+    guiDiv.append(gameMainUi)
+    guiDiv.append(errorUi)
 
+    let errorText = $("#error-text")[0]
     let gui = {
         rootDiv: guiDiv,
+        set gameMainShow(v: boolean) {
+            if (v)
+                gameMainUi.style.display = 'block'
+            else
+                gameMainUi.style.display = 'none'
+        },
         set gameFailedShow(v: boolean) {
             if (v)
                 gameFailedUi.style.display = 'block'
@@ -98,10 +143,22 @@ export function createGUI({game, boat, humans}: {
             else
                 gamePassUi.style.display = 'none'
         },
+        set gameErrorUiShow(v: boolean) {
+            if (v)
+                errorUi.style.display = 'block'
+            else
+                errorUi.style.display = 'none'
+        },
+        showError(str: string) {
+            gui.gameErrorUiShow = true
+            errorText.innerText = str
+        },
     }
 
+    gui.gameMainShow = true
     gui.gameFailedShow = false
     gui.gamePassUiShow = false
+    gui.gameErrorUiShow = false
 
     game.onAfterStatusChangeObservable.add(status => {
         if (status.to === "failed") {
@@ -120,6 +177,22 @@ export function createGUI({game, boat, humans}: {
     for (const restartButton of restartButtons) {
         restartButton.onclick = ev => {
             game.restart()
+        }
+    }
+
+    // ----------- 主菜单逻辑 ----------- //
+    let startBtns = $(".start-button")
+    let stepStrUi = $(".game-main-ui textarea")[0] as HTMLTextAreaElement
+    for (const startBtn of startBtns) {
+        startBtn.onclick = () => {
+            let gameType = $("input[name=game-type]:checked").val()
+            if (gameType === 'game') {
+                game.restart()
+            } else if (gameType === 'show') {
+                let str = stepStrUi.value
+                game.loadStepString(str)
+            }
+            gui.gameMainShow = false
         }
     }
 

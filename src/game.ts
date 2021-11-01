@@ -7,7 +7,8 @@ import {createGUI} from "./gui";
 import {createRules} from "./rule";
 import {createBoatGoAnimation, GameAnimation} from "./animations";
 import * as BABYLON_MATERIALS from "babylonjs-materials";
-import {StepController} from "./step";
+import {operationsToStepInfo, StepLoader, StepLogger} from "./step";
+import {stringToOperations} from "./ai";
 
 export type GameStatus = "continue" | "failed" | "pass"
 
@@ -39,11 +40,13 @@ export interface ValueChange<T> {
 }
 
 export interface Game {
+    scene: BABYLON.Scene
     humanDrag: HumanDrag
+    stepLoader: StepLoader
     readonly boat: Region
     readonly curBank: Region
     readonly nextBank: Region
-    stepController: StepController
+    stepLogger: StepLogger
     // 分别对应游戏继续、失败、过关
     status: GameStatus
     animations: {
@@ -63,6 +66,8 @@ export interface Game {
     boatGo(): void
 
     restart(): void
+
+    loadStepString(str: string): Promise<void>
 }
 
 export async function createGame() {
@@ -200,7 +205,9 @@ export async function createGame() {
     let _status = "continue" as GameStatus
     // @ts-ignore
     let game: Game = {
+        scene,
         humanDrag: createHumanDrag(),
+        // TODO remove
         getDstRegion() {
             for (const region of this.humanDrag.activeRegions) {
                 if (region !== this.boat)
@@ -252,6 +259,19 @@ export async function createGame() {
             game.status = "continue"
             game.onAfterRestartObservable.notifyObservers()
         },
+        async loadStepString(str: string) {
+            game.restart()
+            try {
+                let ops = stringToOperations(str)
+                if (!ops)
+                    throw Error()
+                let stepInfo = operationsToStepInfo(game, ops)
+                await game.stepLoader.loadStepInfo(stepInfo);
+            } catch (e) {
+                let str = "演示失败！原因为:\n" + e
+                gui.showError(str)
+            }
+        },
         get boat() {
             return _boat
         },
@@ -260,15 +280,15 @@ export async function createGame() {
         },
         get nextBank() {
             return _nextBank
-        }
+        },
     }
 
-    game.stepController = new StepController(game)
+    game.stepLogger = new StepLogger(game)
     let camera = createCamera({scene, canvas, game: game,})
     let sceneObjs = await createSceneObjs({scene, game: game,})
     let _boat = sceneObjs.regions.boat
-    let _curBank = sceneObjs.regions.leftBank
-    let _nextBank = sceneObjs.regions.rightBank
+    let _curBank = sceneObjs.regions.leftBank as Region
+    let _nextBank = sceneObjs.regions.rightBank as Region
     let gui = createGUI({
         game: game,
         boat: sceneObjs.regions.boat,
@@ -373,6 +393,7 @@ export async function createGame() {
         waterMesh.material = waterMaterial;
     }
 
+    game.stepLoader = new StepLoader(game)
 
     return game
 }
