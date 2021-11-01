@@ -91,6 +91,7 @@ export abstract class Region {
         return this._humans.has(human)
     }
 
+    // 查找可放置的human的slotManager
     abstract findPutSlotManager(human: Human): SlotManager | undefined
 
     // canPut(human: Human) {
@@ -181,6 +182,7 @@ export abstract class Region {
         return true
     }
 
+    // 查找已经放置的human的slotManager
     abstract findHumanSlotManager(human: Human): SlotManager | false
 }
 

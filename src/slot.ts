@@ -136,6 +136,8 @@ export function createSlotManager({leftDownPosition, rightUpPosition, slotSize}:
         arrange,
         toString,
         slotPosToPlanePos: calculatePosition,
+        // TODO rename to findVacantSlot
+        findEmptySlot,
         get size() {
             return occupy
         },

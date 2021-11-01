@@ -7,7 +7,7 @@ import {createGUI} from "./gui";
 import {createRules} from "./rule";
 import {createBoatGoAnimation, GameAnimation} from "./animations";
 import * as BABYLON_MATERIALS from "babylonjs-materials";
-import {StepLogger} from "./step";
+import {Step, StepLoader, StepLogger} from "./step";
 
 export type GameStatus = "continue" | "failed" | "pass"
 
@@ -39,7 +39,9 @@ export interface ValueChange<T> {
 }
 
 export interface Game {
+    scene: BABYLON.Scene
     humanDrag: HumanDrag
+    stepLoader: StepLoader
     readonly boat: Region
     readonly curBank: Region
     readonly nextBank: Region
@@ -200,6 +202,7 @@ export async function createGame() {
     let _status = "continue" as GameStatus
     // @ts-ignore
     let game: Game = {
+        scene,
         humanDrag: createHumanDrag(),
         // TODO remove
         getDstRegion() {
@@ -261,7 +264,7 @@ export async function createGame() {
         },
         get nextBank() {
             return _nextBank
-        }
+        },
     }
 
     game.stepController = new StepLogger(game)
@@ -374,6 +377,7 @@ export async function createGame() {
         waterMesh.material = waterMaterial;
     }
 
+    game.stepLoader = new StepLoader(game)
 
     return game
 }

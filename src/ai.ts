@@ -52,7 +52,7 @@ class State {
 
 State.max = 3
 
-class Operation {
+export class Operation {
     m: number
     c: number
 
@@ -80,6 +80,22 @@ class Operation {
             return false
         copy.clone(state)
         return state
+    }
+
+    toString() {
+        return `${this.m} ${this.c}`
+    }
+
+    static fromString(str: string) {
+        let reg = /([0-9]+)\s+([0-9]+)/
+        let res = reg.exec(str)
+        if (!res || res.length < 3)
+            return false
+        let m = parseInt(res[1])
+        let c = parseInt(res[2])
+        if (Number.isNaN(m) || Number.isNaN(c))
+            return false
+        return new Operation(m, c)
     }
 }
 
@@ -125,7 +141,7 @@ export class AI {
         function oneStep(state: State, states: State[], op: Operation, ops: Operation[], opLogging: Operation[]): {
             states: State[],
             operations: Operation[],
-        } | boolean {
+        } | false {
             if (State.equal(state, that._targetState)) {
                 states.push(state)
                 return {
@@ -163,4 +179,27 @@ export class AI {
 
         return false
     }
+}
+
+export function operationsToString(ops: Operation[]) {
+    let strArr = []
+    for (const op of ops) {
+        strArr.push(op.toString())
+    }
+    return strArr.join('\n')
+}
+
+export function stringToOperations(str: string): Operation[] | false {
+    let arr = str.split('\n')
+    let ops = [] as Operation[]
+    for (const str of arr) {
+        if (/^\s*$/.test(str)) // 跳过空行
+            continue
+
+        let op = Operation.fromString(str)
+        if (!op)
+            return false
+        ops.push(op)
+    }
+    return ops
 }

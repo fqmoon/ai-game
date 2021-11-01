@@ -25,6 +25,8 @@ export interface Human {
     setPos(pos: BABYLON.Vector3): void
 
     setPosByPlanePos(planePos: BABYLON.Vector2): void
+
+    getPosByPlanePos(planePos: BABYLON.Vector2): BABYLON.Vector3
 }
 
 export async function createHuman({scene, position, identity, game}: {
@@ -67,6 +69,13 @@ export async function createHuman({scene, position, identity, game}: {
             mesh.position.x = planePos.x
             mesh.position.y = human.yOff
             mesh.position.z = planePos.y
+        },
+        getPosByPlanePos(planePos: BABYLON.Vector2) {
+            let rt = mesh.position.clone()
+            rt.x = planePos.x
+            rt.y = human.yOff
+            rt.z = planePos.y
+            return rt
         },
     } as Human
     for (let mesh of meshes) {
