@@ -74,3 +74,8 @@ div {
     text-align: center;
     color: wheat;
 }
+
+#error-text {
+    color: white;
+    text-align: center;
+}

@@ -7,7 +7,8 @@ import {createGUI} from "./gui";
 import {createRules} from "./rule";
 import {createBoatGoAnimation, GameAnimation} from "./animations";
 import * as BABYLON_MATERIALS from "babylonjs-materials";
-import {Step, StepLoader, StepLogger} from "./step";
+import {operationsToStepInfo, StepLoader, StepLogger} from "./step";
+import {stringToOperations} from "./ai";
 
 export type GameStatus = "continue" | "failed" | "pass"
 
@@ -65,6 +66,8 @@ export interface Game {
     boatGo(): void
 
     restart(): void
+
+    loadStepString(str: string): Promise<void>
 }
 
 export async function createGame() {
@@ -255,6 +258,19 @@ export async function createGame() {
             _changeBank(sceneObjs.regions.leftBank, sceneObjs.regions.rightBank)
             game.status = "continue"
             game.onAfterRestartObservable.notifyObservers()
+        },
+        async loadStepString(str: string) {
+            game.restart()
+            try {
+                let ops = stringToOperations(str)
+                if (!ops)
+                    throw Error()
+                let stepInfo = operationsToStepInfo(game, ops)
+                await game.stepLoader.loadStepInfo(stepInfo);
+            } catch (e) {
+                let str = "演示失败！原因为:\n" + e
+                gui.showError(str)
+            }
         },
         get boat() {
             return _boat
