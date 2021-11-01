@@ -70,15 +70,25 @@ export function createSlotManager({leftDownPosition, rightUpPosition, slotSize}:
         return find(space => space)
     }
 
-    function findEmptySlot(): SlotPos | false {
+    function findVacantSlot(index = 0): SlotPos | false {
         if (isFull())
             return false
 
-        return find(space => !space)
+        let i = 0
+        return find(space => {
+            let vacant = !space
+            if (vacant) {
+                if (i === index)
+                    return true
+                else
+                    i += 1
+            }
+            return false
+        })
     }
 
     function put() {
-        let slotPos = findEmptySlot()
+        let slotPos = findVacantSlot()
         if (slotPos) {
             let [row, col] = slotPos
             spaceMat[row][col] = true
@@ -136,8 +146,10 @@ export function createSlotManager({leftDownPosition, rightUpPosition, slotSize}:
         arrange,
         toString,
         slotPosToPlanePos: calculatePosition,
-        // TODO rename to findVacantSlot
-        findEmptySlot,
+        /**
+         * 查找空的位置。index是指要找的空的下标，默认为0
+         */
+        findVacantSlot: findVacantSlot,
         get size() {
             return occupy
         },

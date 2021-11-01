@@ -139,7 +139,7 @@ function createStepCmd(game: Game, step: Step) {
         let anims = createBankToBoatAnims(game, step)
         let promises = []
         let controls = []
-        // 等待所有上般动画播放完毕
+        // 等待所有上船动画播放完毕
         for (const [human, anim] of anims.entries()) {
             let control = game.scene.beginDirectAnimation(human.mesh, [anim], 0, 600, false)
             controls.push(control)
@@ -162,20 +162,21 @@ function createStepCmd(game: Game, step: Step) {
 
 function createBankToBoatAnims(game: Game, step: Step) {
     let anims = new Map<Human, BABYLON.Animation>()
+    let humanIndex = 0
     for (let i = 0; i < step.m; i++) {
         let human = game.curBank.missionaries[i]
-        anims.set(human, createPutAnimation(human, game.boat))
+        anims.set(human, createPutAnimation(human, humanIndex++, game.boat))
     }
     for (let i = 0; i < step.c; i++) {
         let human = game.curBank.cannibals[i]
-        anims.set(human, createPutAnimation(human, game.boat))
+        anims.set(human, createPutAnimation(human, humanIndex++, game.boat))
     }
     return anims
 }
 
 const frameSpeed = 60
 
-function createPutAnimation(human: Human, to: Region) {
+function createPutAnimation(human: Human, humanIndex: number, to: Region) {
     let anim = new BABYLON.Animation("human put to region", "position", frameSpeed,
         BABYLON.Animation.ANIMATIONTYPE_VECTOR3)
 
@@ -184,7 +185,7 @@ function createPutAnimation(human: Human, to: Region) {
         throw Error()
     }
 
-    let slotPos = slotManager.findEmptySlot()
+    let slotPos = slotManager.findVacantSlot(humanIndex)
     if (!slotPos) {
         throw Error()
     }
