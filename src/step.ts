@@ -84,13 +84,14 @@ export class StepLogger {
 
             this.onAfterStepInfoChangeObservable.notifyObservers(this._stepInfo)
         })
+        game.onAfterRestartObservable.add(() => {
+            this._stepInfo = new StepInfo()
+        })
     }
 
     reverseLastStep() {
         // TODO 撤销上一步功能
     }
-
-
 }
 
 function operationToStep(game: Game, operation: Operation) {

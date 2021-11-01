@@ -45,7 +45,7 @@ export interface Game {
     readonly boat: Region
     readonly curBank: Region
     readonly nextBank: Region
-    stepController: StepLogger
+    stepLogger: StepLogger
     // 分别对应游戏继续、失败、过关
     status: GameStatus
     animations: {
@@ -267,7 +267,7 @@ export async function createGame() {
         },
     }
 
-    game.stepController = new StepLogger(game)
+    game.stepLogger = new StepLogger(game)
     let camera = createCamera({scene, canvas, game: game,})
     let sceneObjs = await createSceneObjs({scene, game: game,})
     let _boat = sceneObjs.regions.boat
