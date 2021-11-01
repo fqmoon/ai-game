@@ -28,11 +28,30 @@ function createBoatLeaveButton({game, boat, humans}: {
     return button
 }
 
+function createGameMain() {
+    let div = $.parseHTML(`<div class="model-div">
+            <div class="game-main-ui">
+                <h1 style="color: white;text-align: center">MC问题交互性演示</h1>
+                <div>
+                    <h2>选择模式</h2>
+                    <input type="radio" id="game-type" name="game-type" value="game-type" checked>
+                    <label for="game-type">游戏模式</label>
+                    <input type="radio" id="show-type" name="game-type" value="show-type">
+                    <label for="show-type">演示模式</label>
+                    <label id="path-textarea">输入路径信息：</label>
+                    <textarea></textarea>
+                </div>
+                <button class="start-button">开始</button>
+            </div>
+        </div>`)[0] as HTMLDivElement
+    return div
+}
+
 function createGameFailed() {
     let div = $.parseHTML(`<div class="model-div">
             <div class="background-ui">
+                <h1 style="color: white;text-align: center">游戏失败！</h1>
                 <div class="button-container">
-                    <h1 style="color: white;text-align: center">游戏失败！</h1>
                     <button class="restart-button">重来</button>
                 </div>
             </div>
@@ -43,8 +62,8 @@ function createGameFailed() {
 function createGamePass() {
     let div = $.parseHTML(`<div class="model-div">
             <div class="background-ui">
+                <h1 style="color: white;text-align: center">游戏通关！</h1>
                 <div class="button-container">
-                        <h1 style="color: white;text-align: center">游戏通关！</h1>
 <!--                    TODO 现在还没有这个功能 -->
 <!--                    <button class="home-button">回到主菜单</button>-->
                 </div>
@@ -80,12 +99,16 @@ export function createGUI({game, boat, humans}: {
     guiDiv.append(createBoatLeaveButton({game, boat, humans}))
     pushGameRestartButton(guiDiv)
 
+    let gameMainUi = createGameMain()
     let gameFailedUi = createGameFailed()
     let gamePassUi = createGamePass()
+
     guiDiv.append(gameFailedUi)
     guiDiv.append(gamePassUi)
 
     pushStepInfo(game, guiDiv)
+    // main ui 要在step info ui 之后
+    guiDiv.append(gameMainUi)
 
     let gui = {
         rootDiv: guiDiv,
